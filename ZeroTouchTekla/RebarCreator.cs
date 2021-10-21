@@ -50,6 +50,10 @@ namespace ZeroTouchTekla
                         RTW rtw = new RTW(part);
                         rtw.Create();
                         break;
+                    case ProfileType.CLMN:
+                        CLMN clmn = new CLMN(part);
+                        clmn.Create();
+                        break;
                 }
 
                 //Restore user work plane
@@ -162,7 +166,8 @@ namespace ZeroTouchTekla
         {
             None,
             FTG,
-            RTW
+            RTW,
+            CLMN
         }
         static ProfileType GetProfileType(string profileString)
         {

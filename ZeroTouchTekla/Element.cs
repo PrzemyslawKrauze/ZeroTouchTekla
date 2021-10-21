@@ -12,10 +12,10 @@ namespace ZeroTouchTekla
 {
     public class Element
     {
-        public Element(Beam beam)
+        public Element(Beam part)
         {
-            GetProfilePointsAndParameters(beam);
-            SetRebarCreatorProperties(beam);
+            GetProfilePointsAndParameters(part);
+            SetRebarCreatorProperties(part);
         }
         public void Create()
         { }
@@ -25,6 +25,7 @@ namespace ZeroTouchTekla
         {
             ProfilePoints = new List<List<Point>>();
             ProfileParameters = new Dictionary<string, double>();
+            ElementFace = new ElementFace(ProfilePoints);
         }
         protected static void SetRebarCreatorProperties(Beam beam)
         {
@@ -79,9 +80,64 @@ namespace ZeroTouchTekla
         public static double SideCover = 0;
         public static double BottomCover = 0;
         public static double TopCover = 0;
+        public static ElementFace ElementFace;
         enum RebarType
         {
         };
+    }
+    public class ElementFace
+    {
+        public ElementFace(List<List<Point>> profilePoints)
+        {
+            if (profilePoints.Count != 0)
+            {
+                rebarLegFaces = new List<RebarLegFace>();
+                RebarLegFace startFace = new RebarLegFace();
+                int numberOfPoints = profilePoints[0].Count;
+                for (int i = 0; i < numberOfPoints; i++)
+                {
+                    startFace.Contour.AddContourPoint(new ContourPoint(profilePoints[0][i], null));
+                }
+                rebarLegFaces.Add(startFace);
+
+                for (int i = 0; i < numberOfPoints - 1; i++)
+                {
+                    Point firstPoint = profilePoints[0][i];
+                    Point secondPoint = profilePoints[1][i];
+                    Point thirdPoint = profilePoints[1][i + 1];
+                    Point fourthPoint = profilePoints[0][i + 1];
+
+                    var rebarLegFace = new RebarLegFace();
+                    rebarLegFace.Contour.AddContourPoint(new ContourPoint(firstPoint, null));
+                    rebarLegFace.Contour.AddContourPoint(new ContourPoint(secondPoint, null));
+                    rebarLegFace.Contour.AddContourPoint(new ContourPoint(thirdPoint, null));
+                    rebarLegFace.Contour.AddContourPoint(new ContourPoint(fourthPoint, null));
+                    rebarLegFaces.Add(rebarLegFace);
+                }
+
+
+                RebarLegFace face = new RebarLegFace();
+                face.Contour.AddContourPoint(new ContourPoint(profilePoints[0][numberOfPoints - 1], null));
+                face.Contour.AddContourPoint(new ContourPoint(profilePoints[1][numberOfPoints - 1], null));
+                face.Contour.AddContourPoint(new ContourPoint(profilePoints[1][0], null));
+                face.Contour.AddContourPoint(new ContourPoint(profilePoints[0][0], null));
+                rebarLegFaces.Add(face);
+
+                RebarLegFace endFace = new RebarLegFace();
+                for (int i = 0; i < numberOfPoints; i++)
+                {
+                    endFace.Contour.AddContourPoint(new ContourPoint(profilePoints[1][i], null));
+                }
+                rebarLegFaces.Add(endFace);
+            }
+        }
+        public RebarLegFace GetRebarLegFace(int faceNumber)
+        {
+            return rebarLegFaces[faceNumber];
+        }
+
+        List<RebarLegFace> rebarLegFaces;
+
     }
     public class BaseParameter
     {

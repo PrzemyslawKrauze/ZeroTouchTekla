@@ -7,9 +7,9 @@ namespace ZeroTouchTekla
 {
     public class RTW : Element
     {
-        public RTW(Beam beam) : base(beam)
+        public RTW(Beam part) : base(part)
         {
-            GetProfilePointsAndParameters(beam);
+            GetProfilePointsAndParameters(part);
         }
         new public static void GetProfilePointsAndParameters(Beam beam)
         {
@@ -48,6 +48,7 @@ namespace ZeroTouchTekla
             }
             List<List<Point>> beamPoints = new List<List<Point>> { firstProfile, secondProfile };
             ProfilePoints = beamPoints;
+            ElementFace = new ElementFace(ProfilePoints);
         }
         new public void Create()
         {

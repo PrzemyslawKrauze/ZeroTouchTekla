@@ -91,7 +91,7 @@ namespace ZeroTouchTekla
 
         private void OnCollumnButtonClick(object sender, EventArgs e)
         {
-
+            RebarCreator.Create(RebarCreator.ProfileType.CLMN);
         }
     }
 }
