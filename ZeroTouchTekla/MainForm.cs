@@ -32,7 +32,6 @@ namespace ZeroTouchTekla
                 SheetComboBox.Items.Clear();
                 SheetComboBox.Items.AddRange(sheetNames.ToArray());
             }
-
         }
 
         private void OnSelectedSheetChanged(object sender, EventArgs e)
@@ -87,6 +86,11 @@ namespace ZeroTouchTekla
         private void OnTestButtonClick(object sender, EventArgs e)
         {
             RebarCreator.Test();
+
+        }
+
+        private void OnCollumnButtonClick(object sender, EventArgs e)
+        {
 
         }
     }

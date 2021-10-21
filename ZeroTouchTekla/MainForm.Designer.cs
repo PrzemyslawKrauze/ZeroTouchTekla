@@ -42,6 +42,7 @@ namespace ZeroTouchTekla
             this.rtwRebarButton = new System.Windows.Forms.Button();
             this.creationLabel = new System.Windows.Forms.Label();
             this.TestButton = new System.Windows.Forms.Button();
+            this.CollumnButton = new System.Windows.Forms.Button();
             this.utilityPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -135,6 +136,7 @@ namespace ZeroTouchTekla
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.CollumnButton);
             this.panel1.Controls.Add(this.rtwRebarButton);
             this.panel1.Controls.Add(this.FootingRebarButton);
             this.panel1.Location = new System.Drawing.Point(12, 48);
@@ -171,6 +173,16 @@ namespace ZeroTouchTekla
             this.TestButton.Text = "Test";
             this.TestButton.UseVisualStyleBackColor = true;
             this.TestButton.Click += new System.EventHandler(this.OnTestButtonClick);
+            // 
+            // CollumnButton
+            // 
+            this.CollumnButton.Location = new System.Drawing.Point(25, 61);
+            this.CollumnButton.Name = "CollumnButton";
+            this.CollumnButton.Size = new System.Drawing.Size(153, 23);
+            this.CollumnButton.TabIndex = 3;
+            this.CollumnButton.Text = "Collumn";
+            this.CollumnButton.UseVisualStyleBackColor = true;
+            this.CollumnButton.Click += new System.EventHandler(this.OnCollumnButtonClick);
             // 
             // MainForm
             // 
@@ -210,5 +222,6 @@ namespace ZeroTouchTekla
         private System.Windows.Forms.Label creationLabel;
         private System.Windows.Forms.Button rtwRebarButton;
         private System.Windows.Forms.Button TestButton;
+        private System.Windows.Forms.Button CollumnButton;
     }
 }

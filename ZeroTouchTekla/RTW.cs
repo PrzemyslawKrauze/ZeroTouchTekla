@@ -88,8 +88,8 @@ namespace ZeroTouchTekla
             mainFace.Contour.AddContourPoint(new ContourPoint(startp3bis, null));
             rebarSet.LegFaces.Add(mainFace);
 
-            Point offsetedStartPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y, ProfilePoints[0][0].Z - 1000);
-            Point offsetedEndPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y, ProfilePoints[1][0].Z - 1000);
+            Point offsetedStartPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y, ProfilePoints[0][0].Z + 1000);
+            Point offsetedEndPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y, ProfilePoints[1][0].Z + 1000);
 
             var bottomFace = new RebarLegFace();
             bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
@@ -199,6 +199,18 @@ namespace ZeroTouchTekla
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
             rebarSet.LegFaces.Add(mainFace);
 
+            Point offsetedStartPoint = new Point(ProfilePoints[0][5].X, ProfilePoints[0][5].Y, ProfilePoints[0][5].Z - 40*Convert.ToInt32(rebarSize));
+            Point offsetedEndPoint = new Point(ProfilePoints[1][5].X, ProfilePoints[1][5].Y, ProfilePoints[1][5].Z - 40 * Convert.ToInt32(rebarSize));
+
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][5], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedEndPoint, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedStartPoint, null));
+            rebarSet.LegFaces.Add(bottomFace);
+
+
+
             var guideline = new RebarGuideline();
             guideline.Spacing.Zones.Add(new RebarSpacingZone
             {
@@ -217,14 +229,13 @@ namespace ZeroTouchTekla
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            var hookModifier = new RebarEndDetailModifier();
-            hookModifier.Father = rebarSet;
-            hookModifier.EndType = RebarEndDetailModifier.EndTypeEnum.HOOK;
-            hookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
-            hookModifier.RebarHook.Rotation = 180;
-            hookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
-            hookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
-            hookModifier.Insert();
+            var innerEndDetailModifier = new RebarEndDetailModifier();
+            innerEndDetailModifier.Father = rebarSet;
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = 10 * Convert.ToInt32(rebarSize);
+            innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedStartPoint, null));
+            innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedEndPoint, null));
+            innerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
             if (addSplitter == 1)
@@ -296,7 +307,7 @@ namespace ZeroTouchTekla
             }
 
 
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1 });
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1,3 });
         }
         public void InnerLongitudinalRebar()
         {

@@ -25,8 +25,6 @@ namespace ZeroTouchTekla
             rebarSet.GetUserProperty("__MIN_BAR_LENTYPE", ref mlsi);
             rebarSet.GetUserProperty("__MIN_BAR_LENTYPE", ref mlsd);
             rebarSet.GetUserProperty("__MIN_BAR_LENTYPE", ref mlss);
-
-            int a = 1;
         }
         public static void Create(ProfileType profileType)
         {
