@@ -29,6 +29,39 @@ namespace ZeroTouchTekla
 
             rebarSet.SetUserProperty(RebarCreator.FatherIDName, "asd");
         }
+        public static void Test2()
+        {
+            Model model = new Model();
+            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
+            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+            try
+            {
+                Beam part = picker.PickObject(pickObjectEnum) as Beam;
+                FatherID = part.Identifier.ID;
+                if (part != null)
+                {
+                    //Store current work plane
+                    TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+                    //Get beam local plane
+                    TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
+                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+
+                    RTW rtw = new RTW(part);
+
+                    //Restore user work plane
+                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+                    model.CommitChanges();
+                }
+
+                ChangeLayer(model);
+                ChangeLayer(model);
+                LayerDictionary = new Dictionary<int, int[]>();
+            }
+            catch (System.ApplicationException)
+            {
+                Operation.DisplayPrompt("User interrupted!");
+            }
+        }
         public static void Create(ProfileType profileType)
         {
             Model model = new Model();

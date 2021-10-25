@@ -18,6 +18,7 @@ namespace ZeroTouchTekla
         {
             string[] profileValues = GetProfileValues(beam);
             //RTW Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth
+            //RTWVR Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth*Height2
             double height = Convert.ToDouble(profileValues[0]);
             double corniceHeight = Convert.ToDouble(profileValues[1]);
             double bottomWidth = Convert.ToDouble(profileValues[2]);
@@ -25,13 +26,21 @@ namespace ZeroTouchTekla
             double corniceWidth = Convert.ToDouble(profileValues[4]);
             double length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
             double fullWidth = corniceWidth + bottomWidth;
-
+            double hToW = (bottomWidth - (topWidth - corniceWidth)) / height;
+            double height2 = 0;
+            if (profileValues.Length > 5)
+            {
+                height2 = Convert.ToDouble(profileValues[5]);
+            }
+            double bottomWidth2 = hToW * height2 + (topWidth- corniceWidth);      
+            
             ProfileParameters.Add(RTWParameter.Height, height);
             ProfileParameters.Add(RTWParameter.CorniceHeight, corniceHeight);
             ProfileParameters.Add(RTWParameter.BottomWidth, bottomWidth);
             ProfileParameters.Add(RTWParameter.TopWidth, topWidth);
             ProfileParameters.Add(RTWParameter.CorniceWidth, corniceWidth);
             ProfileParameters.Add(RTWParameter.Length, length);
+            ProfileParameters.Add(RTWParameter.Height2, height2);
 
             Point p0 = new Point(0, -height / 2.0, fullWidth / 2.0 - corniceWidth);
             Point p1 = new Point(0, height / 2.0 - corniceHeight, p0.Z);
@@ -43,11 +52,24 @@ namespace ZeroTouchTekla
             List<Point> firstProfile = new List<Point> { p0, p1, p2, p3, p4, p5 };
 
             List<Point> secondProfile = new List<Point>();
-            foreach (Point p in firstProfile)
+            if (height2 == 0)
             {
-                Point secondPoint = new Point(p.X, p.Y, p.Z);
-                secondPoint.Translate(length, 0, 0);
-                secondProfile.Add(secondPoint);
+                foreach (Point p in firstProfile)
+                {
+                    Point secondPoint = new Point(p.X, p.Y, p.Z);
+                    secondPoint.Translate(length, 0, 0);
+                    secondProfile.Add(secondPoint);
+                }
+            }
+            else
+            {
+                Point s0 = new Point(length, -height/ 2.0, fullWidth / 2.0 - corniceWidth);
+                Point s1 = new Point(length, s0.Y+ height2- corniceHeight, s0.Z);
+                Point s2 = new Point(length, s1.Y, p1.Z + corniceWidth);
+                Point s3 = new Point(length, s2.Y + corniceHeight, s2.Z);
+                Point s4 = new Point(length, s3.Y, s3.Z - topWidth);
+                Point s5 = new Point(length, -height / 2.0, s0.Z-bottomWidth2);
+                secondProfile = new List<Point> { s0, s1, s2, s3, s4, s5 };
             }
             List<List<Point>> beamPoints = new List<List<Point>> { firstProfile, secondProfile };
             ProfilePoints = beamPoints;
@@ -510,8 +532,8 @@ namespace ZeroTouchTekla
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = 100;
 
-            guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
-            guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
+            guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
 
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
@@ -566,11 +588,21 @@ namespace ZeroTouchTekla
             });
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = 100;
-
             guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
             guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
-
             rebarSet.Guidelines.Add(guideline);
+
+            if(ProfileParameters[RTWParameter.Height2]!=0)
+            {
+                var secondaryGuideLine = new RebarGuideline();
+                secondaryGuideLine.Spacing.InheritFromPrimary = true;
+                secondaryGuideLine.Spacing.StartOffset = 100;
+                secondaryGuideLine.Spacing.EndOffset = 100;
+                secondaryGuideLine.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
+                secondaryGuideLine.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
+                rebarSet.Guidelines.Add(secondaryGuideLine);
+            }
+
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
@@ -598,22 +630,22 @@ namespace ZeroTouchTekla
                 leftBottom = ProfilePoints[0][0];
                 rightBottom = ProfilePoints[0][5];
                 rightTop = ProfilePoints[0][4];
-                leftTop = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[0][1].Z);
+                leftTop = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + ProfileParameters[RTWParameter.CorniceHeight], ProfilePoints[0][1].Z);
                 endLeftBottom = ProfilePoints[1][0];
                 endRightBottom = ProfilePoints[1][5];
                 endRightTop = ProfilePoints[1][4];
-                endLeftTop = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[1][1].Z);
+                endLeftTop = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + ProfileParameters[RTWParameter.CorniceHeight], ProfilePoints[1][1].Z);
             }
             else
             {
                 leftBottom = ProfilePoints[1][0];
                 rightBottom = ProfilePoints[1][5];
                 rightTop = ProfilePoints[1][4];
-                leftTop = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[1][1].Z);
+                leftTop = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + ProfileParameters[RTWParameter.CorniceHeight], ProfilePoints[1][1].Z);
                 endLeftBottom = ProfilePoints[0][0];
                 endRightBottom = ProfilePoints[0][5];
                 endRightTop = ProfilePoints[0][4];
-                endLeftTop = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[0][1].Z);
+                endLeftTop = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + ProfileParameters[RTWParameter.CorniceHeight], ProfilePoints[0][1].Z);
             }
 
             var mainFace = new RebarLegFace();
@@ -656,7 +688,7 @@ namespace ZeroTouchTekla
             rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
             rebarSet.SetUserProperty("__MIN_BAR_LENGTH", 30 * Convert.ToDouble(rebarSize));
             new Model().CommitChanges();
-
+                        
             //Create RebarEndDetailModifier
             var innerEndDetailModifier = new RebarEndDetailModifier();
             innerEndDetailModifier.Father = rebarSet;
@@ -664,6 +696,10 @@ namespace ZeroTouchTekla
             innerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = 10 * Convert.ToInt32(rebarSize);
             innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(endLeftBottom, null));
             innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(endLeftTop, null));
+            if(ProfileParameters[RTWParameter.Height2]!=0)
+            {
+                innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(leftTop, null));
+            }
             innerEndDetailModifier.Insert();
 
             var outerEndDetailModifier = new RebarEndDetailModifier();
@@ -672,6 +708,10 @@ namespace ZeroTouchTekla
             outerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = 10 * Convert.ToInt32(rebarSize);
             outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(endRightBottom, null));
             outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(endRightTop, null));
+            if (ProfileParameters[RTWParameter.Height2] != 0)
+            {
+                outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(rightTop, null));
+            }
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
@@ -860,6 +900,7 @@ namespace ZeroTouchTekla
             public const string TopWidth = "TopWidth";
             public const string CorniceWidth = "CorniceWidth";
             public const string Length = "Length";
+            public const string Height2 = "Height2";
         }
         #endregion
     }
