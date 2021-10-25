@@ -79,5 +79,32 @@ namespace ZeroTouchTekla
             }
             return list;
         }
+
+        public static void StretchLegFace(ref RebarLegFace face, int pointNumber, Vector vector)
+        {
+            ContourPoint cp = face.Contour.ContourPoints[pointNumber] as ContourPoint;
+            ContourPoint correctedCP = new ContourPoint(new Point(cp.X + vector.X, cp.Y + vector.Y, cp.Z + vector.Z), null);
+            face.Contour.ContourPoints[pointNumber] = correctedCP;
+        }
+        /// <summary>
+        /// Clone RebarLegFace ContourPoints
+        /// </summary>
+        /// <param name="face"></param>
+        /// <returns></returns>
+        public static RebarLegFace CloneRebarLegFaceCP(RebarLegFace face)
+        {
+            RebarLegFace clonedFace = new RebarLegFace();
+            foreach(ContourPoint cp in face.Contour.ContourPoints)
+            {
+                clonedFace.Contour.ContourPoints.Add(new ContourPoint(new Point(cp.X, cp.Y, cp.Z), null));
+            }
+            return clonedFace;
+        }
+        public static int GetUserProperty(ModelObject modelObject, string parameterName)
+        {
+            int parameter = 0;
+            modelObject.GetUserProperty(parameterName, ref parameter);
+            return parameter;
+        }
     }
 }

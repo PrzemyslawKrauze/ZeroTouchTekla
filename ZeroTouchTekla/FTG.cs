@@ -12,10 +12,13 @@ namespace ZeroTouchTekla
 {
     public class FTG : Element
     {
+        #region Constructor
         public FTG(Beam beam) : base(beam)
         {
             GetProfilePointsAndParameters(beam);
         }
+        #endregion
+        #region PublicMathods
         new public static void GetProfilePointsAndParameters(Beam beam)
         {
             string[] profileValues = GetProfileValues(beam);
@@ -56,6 +59,68 @@ namespace ZeroTouchTekla
             ProfilePoints = beamPoints;
             ElementFace = new ElementFace(ProfilePoints);
         }
+        new public void Create()
+        {
+            if (Convert.ToInt32(Program.ExcelDictionary["S_FullStirrups"]) == 1)
+            {
+                FullStirrups();
+            }
+            else
+            {
+                Stirrups();
+            }
+            TopPerpendicularRebar();
+            BottomPerpendicularRebar();
+            BottomLongitudinalRebar();
+            TopLongitudinalLeftRebar();
+            TopLongitudinalRightRebar();
+            ClosingCShapeRebar(1);
+            ClosingCShapeRebar(2);
+            ClosingLongitudinalRebar(1);
+            ClosingLongitudinalRebar(2);
+            ClosingLongitudinalRebar(3);
+            ClosingLongitudinalRebar(4);
+        }
+        new public void CreateSingle(string rebarName)
+        {
+            rebarName = rebarName.Split('_')[1];
+            RebarType rType;
+            Enum.TryParse(rebarName, out rType);
+            switch (rType)
+            {
+                case RebarType.FS:
+                    Stirrups();
+                    break;
+                case RebarType.S:
+                    FullStirrups();
+                    break;
+                case RebarType.TPR:
+                    TopPerpendicularRebar();
+                    break;
+                case RebarType.BPR:
+                    BottomPerpendicularRebar();
+                    break;
+                case RebarType.BLR:
+                    BottomLongitudinalRebar();
+                    break;
+                case RebarType.TLR:
+                    TopLongitudinalLeftRebar();
+                    TopLongitudinalRightRebar();
+                    break;
+                case RebarType.CCSR:
+                    ClosingCShapeRebar(1);
+                    ClosingCShapeRebar(2);
+                    break;
+                case RebarType.CLR:
+                    ClosingLongitudinalRebar(1);
+                    ClosingLongitudinalRebar(2);
+                    ClosingLongitudinalRebar(3);
+                    ClosingLongitudinalRebar(4);
+                    break;
+            }
+        }
+        #endregion
+        #region PrivateMethods
         void FullStirrups()
         {
             string rebarSize = Program.ExcelDictionary["S_Diameter"];
@@ -70,7 +135,7 @@ namespace ZeroTouchTekla
             for (int i = 0; i < numberOfStirrupSets; i++)
             {
                 var rebarSet = new RebarSet();
-                rebarSet.RebarProperties.Name = "FullStirrup";
+                rebarSet.RebarProperties.Name = "FTG_FS";
                 rebarSet.RebarProperties.Grade = "B500SP";
                 rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
                 rebarSet.RebarProperties.Size = rebarSize;
@@ -178,6 +243,7 @@ namespace ZeroTouchTekla
                 rightHookModifier.Insert();
                 new Model().CommitChanges();
 
+                rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
                 RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1, 1, 1 });
             }
         }
@@ -194,7 +260,7 @@ namespace ZeroTouchTekla
             for (int i = 0; i < numberOfStirrupSets; i++)
             {
                 var rebarSet = new RebarSet();
-                rebarSet.RebarProperties.Name = "Stirrup";
+                rebarSet.RebarProperties.Name = "FTG_S";
                 rebarSet.RebarProperties.Grade = "B500SP";
                 rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
                 rebarSet.RebarProperties.Size = rebarSize;
@@ -290,6 +356,7 @@ namespace ZeroTouchTekla
 
                 new Model().CommitChanges();
 
+                rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
                 RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1 });
             }
         }
@@ -298,7 +365,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["TPR_Diameter"];
             string spacing = Program.ExcelDictionary["TPR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "TPR";
+            rebarSet.RebarProperties.Name = "FTG_TPR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -335,6 +402,7 @@ namespace ZeroTouchTekla
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2, 1 });
         }
         void BottomPerpendicularRebar()
@@ -342,7 +410,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["BPR_Diameter"];
             string spacing = Program.ExcelDictionary["BPR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "BPR";
+            rebarSet.RebarProperties.Name = "FTG_BPR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -391,6 +459,7 @@ namespace ZeroTouchTekla
             rightHookModifier.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void BottomLongitudinalRebar()
@@ -398,7 +467,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["BLR_Diameter"];
             string spacing = Program.ExcelDictionary["BLR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "BLR";
+            rebarSet.RebarProperties.Name = "FTG_BLR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -426,6 +495,7 @@ namespace ZeroTouchTekla
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
         }
         void TopLongitudinalLeftRebar()
@@ -433,7 +503,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["TLR_Diameter"];
             string spacing = Program.ExcelDictionary["TLR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "TLR";
+            rebarSet.RebarProperties.Name = "FTG_TLR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -461,6 +531,7 @@ namespace ZeroTouchTekla
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
         }
         void TopLongitudinalRightRebar()
@@ -468,7 +539,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["TLR_Diameter"];
             string spacing = Program.ExcelDictionary["TLR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "TLR";
+            rebarSet.RebarProperties.Name = "FTG_TLR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -496,6 +567,7 @@ namespace ZeroTouchTekla
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
         }
         void ClosingCShapeRebar(int faceNumber)
@@ -504,7 +576,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["CR_Diameter"];
             string spacing = Program.ExcelDictionary["CR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "CCSR";
+            rebarSet.RebarProperties.Name = "FTG_CCSR_" + faceNumber;
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -593,6 +665,7 @@ namespace ZeroTouchTekla
             topLengthModifierRight.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3, 3, 3 });
         }
         void ClosingLongitudinalRebar(int faceNumber)
@@ -601,7 +674,7 @@ namespace ZeroTouchTekla
             string rebarSize = Program.ExcelDictionary["CR_Diameter"];
             string spacing = Program.ExcelDictionary["CR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "CLR";
+            rebarSet.RebarProperties.Name = "FTG_CLR_" + faceNumber;
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -710,71 +783,18 @@ namespace ZeroTouchTekla
             topLengthModifier.Insert();
             new Model().CommitChanges();
 
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
         }
-        new public void Create()
-        {
-            if (Convert.ToInt32(Program.ExcelDictionary["S_FullStirrups"]) == 1)
-            {
-                FullStirrups();
-            }
-            else
-            {
-                Stirrups();
-            }
-            TopPerpendicularRebar();
-            BottomPerpendicularRebar();
-            BottomLongitudinalRebar();
-            TopLongitudinalLeftRebar();
-            TopLongitudinalRightRebar();
-            ClosingCShapeRebar(1);
-            ClosingCShapeRebar(2);
-            ClosingLongitudinalRebar(1);
-            ClosingLongitudinalRebar(2);
-            ClosingLongitudinalRebar(3);
-            ClosingLongitudinalRebar(4);
-        }
-        new public void CreateSingle(string rebarName)
-        {
-            RebarType rType;
-            Enum.TryParse(rebarName, out rType);
-            switch (rType)
-            {
-                case RebarType.Stirrup:
-                    Stirrups();
-                    break;
-                case RebarType.FullStirrup:
-                    FullStirrups();
-                    break;
-                case RebarType.TPR:
-                    TopPerpendicularRebar();
-                    break;
-                case RebarType.BPR:
-                    BottomPerpendicularRebar();
-                    break;
-                case RebarType.BLR:
-                    BottomLongitudinalRebar();
-                    break;
-                case RebarType.TLR:
-                    TopLongitudinalLeftRebar();
-                    TopLongitudinalRightRebar();
-                    break;
-                case RebarType.CCSR:
-                    ClosingCShapeRebar(1);
-                    ClosingCShapeRebar(2);
-                    break;
-                case RebarType.CLR:
-                    ClosingLongitudinalRebar(1);
-                    ClosingLongitudinalRebar(2);
-                    ClosingLongitudinalRebar(3);
-                    ClosingLongitudinalRebar(4);
-                    break;
-            }
-        }
+        #endregion
+        #region Properties
+
+        #endregion
+        #region Fields
         public enum RebarType
         {
-            FullStirrup,
-            Stirrup,
+            FS,
+            S,
             TPR,
             BPR,
             BLR,
@@ -790,5 +810,6 @@ namespace ZeroTouchTekla
             public const string AsymWiidth = "AsymWidth";
             public const string Length = "Length";
         }
+        #endregion
     }
 }
