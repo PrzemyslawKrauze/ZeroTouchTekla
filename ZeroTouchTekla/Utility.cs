@@ -106,5 +106,10 @@ namespace ZeroTouchTekla
             modelObject.GetUserProperty(parameterName, ref parameter);
             return parameter;
         }
+        public static Point TranslePointByVectorAndDistance(Point point,Vector vector,double distance)
+        {
+            Point translatedPoint = new Point(point.X + vector.X * distance, point.Y + vector.Y * distance, point.Z + vector.Z * distance);
+            return translatedPoint;
+        }
     }
 }

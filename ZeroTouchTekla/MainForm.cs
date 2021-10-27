@@ -93,5 +93,10 @@ namespace ZeroTouchTekla
         {
             RebarCreator.Create(RebarCreator.ProfileType.CLMN);
         }
+
+        private void OnDoubleRTWButtonClick(object sender, EventArgs e)
+        {
+            RebarCreator.Create(RebarCreator.ProfileType.DRTW);
+        }
     }
 }

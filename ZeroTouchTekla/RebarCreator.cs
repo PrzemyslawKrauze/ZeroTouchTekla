@@ -89,6 +89,13 @@ namespace ZeroTouchTekla
                             RTW rtw = new RTW(part);
                             rtw.Create();
                             break;
+                        case ProfileType.DRTW:
+                            Tekla.Structures.Model.UI.Picker secondPicker = new Tekla.Structures.Model.UI.Picker();
+                            Tekla.Structures.Model.UI.Picker.PickObjectEnum secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+                            Beam secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
+                            DRTW drtw = new DRTW(part,secondPart);
+                            drtw.Create();
+                            break;
                         case ProfileType.CLMN:
                             CLMN clmn = new CLMN(part);
                             clmn.Create();
@@ -244,6 +251,7 @@ namespace ZeroTouchTekla
             None,
             FTG,
             RTW,
+            DRTW,
             CLMN
         }
         public static int FatherID;
