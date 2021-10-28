@@ -29,10 +29,10 @@ namespace ZeroTouchTekla
             double chamfer = Convert.ToDouble(profileValues[2]);
             double length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
 
-            ProfileParameters.Add(CLMNParameter.Width, width); ;
-            ProfileParameters.Add(CLMNParameter.Height, height);
-            ProfileParameters.Add(CLMNParameter.Chamfer, chamfer);
-            ProfileParameters.Add(CLMNParameter.Length, length);
+            Width = width;
+            Height = height;
+            Chamfer = chamfer;
+            Length = length;
 
             Point p1 = new Point(0, -height / 2.0, -width / 2.0);
             Point p2 = new Point(0, p1.Y + height, p1.Z);
@@ -115,8 +115,8 @@ namespace ZeroTouchTekla
             int secondSpacing = Convert.ToInt32(Program.ExcelDictionary["OS_SecondSpacing"]);
             int doubled = Convert.ToInt32(Program.ExcelDictionary["OS_Doubled"]);
             double doubledOffset = Convert.ToDouble(Program.ExcelDictionary["OS_DoubledOffset"]);
-            double width = ProfileParameters[CLMNParameter.Width];
-            double height = ProfileParameters[CLMNParameter.Height];
+            double width = Width;
+            double height = Height;
 
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "CLMN_OS_" + isSecond;
@@ -604,13 +604,11 @@ namespace ZeroTouchTekla
             IMR,
             TCR
         }
-        class CLMNParameter : BaseParameter
-        {
-            public const string Width = "Width";
-            public const string Height = "Height";
-            public const string Chamfer = "Chamfer";
-            public const string Length = "Length";
-        }
+        public static double Width;
+        public static double Height;
+        public static double Chamfer;
+        public static double Length;
+       
         #endregion
     }
 }

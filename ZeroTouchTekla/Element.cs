@@ -139,8 +139,4 @@ namespace ZeroTouchTekla
         List<RebarLegFace> rebarLegFaces;
 
     }
-    public class BaseParameter
-    {
-        public const string None = "None";
-    }
 }

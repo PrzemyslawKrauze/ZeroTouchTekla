@@ -28,10 +28,10 @@ namespace ZeroTouchTekla
             double secondHeight = Convert.ToDouble(profileValues[2]);
             double length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
 
-            ProfileParameters.Add(FTGParameter.Width, width); ;
-            ProfileParameters.Add(FTGParameter.FirstHeight, firstHeight);
-            ProfileParameters.Add(FTGParameter.SecondHeight, secondHeight);
-            ProfileParameters.Add(FTGParameter.Length, length);
+            Width = width;
+            FirstHeight = firstHeight;
+            SecondHeight = secondHeight;
+            Length = length;
 
             Point p1 = new Point(0, -(firstHeight + secondHeight) / 2.0, -width / 2.0);
             Point p2 = new Point(0, p1.Y + firstHeight, p1.Z);
@@ -42,8 +42,12 @@ namespace ZeroTouchTekla
             if (profileValues.Length > 3)
             {
                 double asymWidth = Convert.ToDouble(profileValues[3]);
-                ProfileParameters.Add(FTGParameter.AsymWiidth, asymWidth);
+                AsymWidth = asymWidth;
                 p3 = new Point(0, p3.Y, p2.Z + asymWidth);
+            }
+            else
+            {
+                AsymWidth = 0;
             }
 
             List<Point> firstProfile = new List<Point> { p1, p2, p3, p4, p5 };
@@ -128,7 +132,7 @@ namespace ZeroTouchTekla
             int barSpacing = Convert.ToInt32(Program.ExcelDictionary["S_BarSpacing"]);
             int stirrupSpacing = Convert.ToInt32(Program.ExcelDictionary["S_StirrupSpacing"]);
 
-            double length = ProfileParameters[FTGParameter.Length];
+            double length = Length;
             int numberOfStirrupSets = (int)Math.Floor((length - 2 * SideCover) / (stirrupSpacing + barSpacing));
             double leftover = length - barSpacing * numberOfStirrupSets - stirrupSpacing * (numberOfStirrupSets - 1);
 
@@ -253,7 +257,7 @@ namespace ZeroTouchTekla
             int rowSpacing = Convert.ToInt32(Program.ExcelDictionary["S_RowSpacing"]);
             int barSpacing = Convert.ToInt32(Program.ExcelDictionary["S_BarSpacing"]);
 
-            double length = ProfileParameters[FTGParameter.Length];
+            double length = Length;
             int numberOfStirrupSets = (int)Math.Floor((length - 2 * SideCover) / (barSpacing));
             double leftover = length - barSpacing * (numberOfStirrupSets - 1);
 
@@ -802,14 +806,12 @@ namespace ZeroTouchTekla
             CCSR,
             CLR
         }
-        class FTGParameter : BaseParameter
-        {
-            public const string Width = "Width";
-            public const string FirstHeight = "FirstHeight";
-            public const string SecondHeight = "SecondHeight";
-            public const string AsymWiidth = "AsymWidth";
-            public const string Length = "Length";
-        }
+        static double Width;
+        static double FirstHeight;
+        static double SecondHeight;
+        static double AsymWidth;
+        static double Length;
+      
         #endregion
     }
 }

@@ -22,8 +22,7 @@ namespace ZeroTouchTekla
             string[] profileValues1 = GetProfileValues(beam1);
             string[] profileValues2 = GetProfileValues(beam2);
             //RTW Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth
-            //RTWVR Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth*Height2
-            //DRTW
+            //RTWV Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth*Height2
             double height1 = Convert.ToDouble(profileValues1[0]);
             double corniceHeight = Convert.ToDouble(profileValues1[1]);
             double bottomWidth = Convert.ToDouble(profileValues1[2]);
@@ -1118,11 +1117,6 @@ namespace ZeroTouchTekla
         public static double BottomWidth2;
         public static double Height3;
         public static double BottomWidth3;
-
-        class Parametero
-        {
-            public static double Height1 = 0;
-        }
         #endregion
     }
 }
