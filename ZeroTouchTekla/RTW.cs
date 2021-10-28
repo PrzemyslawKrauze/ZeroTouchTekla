@@ -141,8 +141,8 @@ namespace ZeroTouchTekla
             rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
-            Point startp3bis = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[0][1].Z);
-            Point endp3bis = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[1][1].Z);
+            Point startp3bis = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + CorniceHeight, ProfilePoints[0][1].Z);
+            Point endp3bis = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + CorniceHeight, ProfilePoints[1][1].Z);
 
             var mainFace = new RebarLegFace();
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
@@ -316,12 +316,12 @@ namespace ZeroTouchTekla
 
                 Point offsetedStartP5 = new Point(ProfilePoints[0][5].X, ProfilePoints[0][5].Y, ProfilePoints[0][5].Z);
                 offsetedStartP5.Translate(0, spliterOffset, 0);
-                Point startP5Bis = new Point(offsetedStartP5.X, offsetedStartP5.Y, offsetedStartP5.Z - ProfileParameters["BottomWidth"] * 2);
+                Point startP5Bis = new Point(offsetedStartP5.X, offsetedStartP5.Y, offsetedStartP5.Z - BottomWidth * 2);
                 Line startline = new Line(offsetedStartP5, startP5Bis);
 
                 Point offsetedEndP5 = new Point(ProfilePoints[1][5].X, ProfilePoints[1][5].Y, ProfilePoints[1][5].Z);
                 offsetedEndP5.Translate(0, spliterOffset, 0);
-                Point endP5Bis = new Point(offsetedEndP5.X, offsetedEndP5.Y, offsetedEndP5.Z - ProfileParameters["BottomWidth"] * 2);
+                Point endP5Bis = new Point(offsetedEndP5.X, offsetedEndP5.Y, offsetedEndP5.Z - BottomWidth * 2);
                 Line endline = new Line(offsetedEndP5, endP5Bis);
 
                 Point startIntersection = Intersection.LineToPlane(startline, facePlane);
@@ -341,12 +341,12 @@ namespace ZeroTouchTekla
 
                 Point offsetedStartTopP5 = new Point(ProfilePoints[0][5].X, ProfilePoints[0][5].Y, ProfilePoints[0][5].Z);
                 offsetedStartTopP5.Translate(0, spliterOffset + 1.3 * 40 * Convert.ToDouble(rebarSize), 0);
-                Point startTopP5Bis = new Point(offsetedStartTopP5.X, offsetedStartTopP5.Y, offsetedStartTopP5.Z - ProfileParameters["BottomWidth"] * 2);
+                Point startTopP5Bis = new Point(offsetedStartTopP5.X, offsetedStartTopP5.Y, offsetedStartTopP5.Z - BottomWidth * 2);
                 Line startTopline = new Line(offsetedStartTopP5, startTopP5Bis);
 
                 Point offsetedTopEndP5 = new Point(ProfilePoints[1][5].X, ProfilePoints[1][5].Y, ProfilePoints[1][5].Z);
                 offsetedTopEndP5.Translate(0, spliterOffset + 1.3 * 40 * Convert.ToDouble(rebarSize), 0);
-                Point endTopP5Bis = new Point(offsetedTopEndP5.X, offsetedTopEndP5.Y, offsetedTopEndP5.Z - ProfileParameters["BottomWidth"] * 2);
+                Point endTopP5Bis = new Point(offsetedTopEndP5.X, offsetedTopEndP5.Y, offsetedTopEndP5.Z - BottomWidth * 2);
                 Line endTopLine = new Line(offsetedTopEndP5, endTopP5Bis);
 
                 Point startTopIntersection = Intersection.LineToPlane(startTopline, facePlane);
@@ -374,9 +374,9 @@ namespace ZeroTouchTekla
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3 });
         }
         void InnerLongitudinalRebar()
-        {
-            string rebarSize = Program.ExcelDictionary["ILR_Diameter"];
-            string secondRebarSize = Program.ExcelDictionary["ILR_SecondDiameter"];
+        {            
+            string rebarSize = Program.ExcelDictionary["ILR_SecondDiameter"];
+            string secondRebarSize = Program.ExcelDictionary["ILR_Diameter"];
             string spacing = Program.ExcelDictionary["ILR_Spacing"];
             double startOffset = Convert.ToDouble(Program.ExcelDictionary["ILR_StartOffset"]);
             double firstLength = Convert.ToDouble(Program.ExcelDictionary["ILR_SecondDiameterLength"]);
@@ -432,8 +432,8 @@ namespace ZeroTouchTekla
         }
         void OuterLongitudinalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OLR_Diameter"];
-            string secondRebarSize = Program.ExcelDictionary["OLR_SecondDiameter"];
+            string rebarSize = Program.ExcelDictionary["OLR_SecondDiameter"];
+            string secondRebarSize = Program.ExcelDictionary["OLR_Diameter"];
             string spacing = Program.ExcelDictionary["OLR_Spacing"];
             double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
             double firstLength = Convert.ToDouble(Program.ExcelDictionary["OLR_SecondDiameterLength"]);
@@ -737,14 +737,14 @@ namespace ZeroTouchTekla
                 leftBottom = ProfilePoints[0][0];
                 rightBottom = ProfilePoints[0][5];
                 rightTop = ProfilePoints[0][4];
-                leftTop = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[0][1].Z);
+                leftTop = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + CorniceHeight, ProfilePoints[0][1].Z);
             }
             else
             {
                 leftBottom = ProfilePoints[1][0];
                 rightBottom = ProfilePoints[1][5];
                 rightTop = ProfilePoints[1][4];
-                leftTop = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + ProfileParameters["CorniceHeight"], ProfilePoints[1][1].Z);
+                leftTop = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + CorniceHeight, ProfilePoints[1][1].Z);
             }
 
             var mainFace = new RebarLegFace();

@@ -98,5 +98,10 @@ namespace ZeroTouchTekla
         {
             RebarCreator.Create(RebarCreator.ProfileType.DRTW);
         }
+
+        private void OnRetainingWallStepButtonClick(object sender, EventArgs e)
+        {
+            RebarCreator.Create(RebarCreator.ProfileType.RTWS);
+        }
     }
 }

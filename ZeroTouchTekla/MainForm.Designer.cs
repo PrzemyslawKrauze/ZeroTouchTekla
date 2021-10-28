@@ -39,11 +39,12 @@ namespace ZeroTouchTekla
             this.recreateRebarButton = new System.Windows.Forms.Button();
             this.utilityLabel = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.RTWDButton = new System.Windows.Forms.Button();
             this.CollumnButton = new System.Windows.Forms.Button();
-            this.rtwRebarButton = new System.Windows.Forms.Button();
+            this.RTWButton = new System.Windows.Forms.Button();
             this.creationLabel = new System.Windows.Forms.Label();
             this.TestButton = new System.Windows.Forms.Button();
-            this.DoubledRTWButton = new System.Windows.Forms.Button();
+            this.RTWSButton = new System.Windows.Forms.Button();
             this.utilityPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -137,18 +138,29 @@ namespace ZeroTouchTekla
             // 
             // panel1
             // 
-            this.panel1.Controls.Add(this.DoubledRTWButton);
+            this.panel1.Controls.Add(this.RTWSButton);
+            this.panel1.Controls.Add(this.RTWDButton);
             this.panel1.Controls.Add(this.CollumnButton);
-            this.panel1.Controls.Add(this.rtwRebarButton);
+            this.panel1.Controls.Add(this.RTWButton);
             this.panel1.Controls.Add(this.FootingRebarButton);
             this.panel1.Location = new System.Drawing.Point(12, 48);
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 369);
             this.panel1.TabIndex = 9;
             // 
+            // RTWDButton
+            // 
+            this.RTWDButton.Location = new System.Drawing.Point(25, 61);
+            this.RTWDButton.Name = "RTWDButton";
+            this.RTWDButton.Size = new System.Drawing.Size(153, 23);
+            this.RTWDButton.TabIndex = 4;
+            this.RTWDButton.Text = "Doubled Retaining Wall";
+            this.RTWDButton.UseVisualStyleBackColor = true;
+            this.RTWDButton.Click += new System.EventHandler(this.OnDoubleRTWButtonClick);
+            // 
             // CollumnButton
             // 
-            this.CollumnButton.Location = new System.Drawing.Point(25, 90);
+            this.CollumnButton.Location = new System.Drawing.Point(25, 119);
             this.CollumnButton.Name = "CollumnButton";
             this.CollumnButton.Size = new System.Drawing.Size(153, 23);
             this.CollumnButton.TabIndex = 3;
@@ -156,15 +168,15 @@ namespace ZeroTouchTekla
             this.CollumnButton.UseVisualStyleBackColor = true;
             this.CollumnButton.Click += new System.EventHandler(this.OnCollumnButtonClick);
             // 
-            // rtwRebarButton
+            // RTWButton
             // 
-            this.rtwRebarButton.Location = new System.Drawing.Point(25, 32);
-            this.rtwRebarButton.Name = "rtwRebarButton";
-            this.rtwRebarButton.Size = new System.Drawing.Size(153, 23);
-            this.rtwRebarButton.TabIndex = 2;
-            this.rtwRebarButton.Text = "Retaining Wall";
-            this.rtwRebarButton.UseVisualStyleBackColor = true;
-            this.rtwRebarButton.Click += new System.EventHandler(this.OnRTWButtonClick);
+            this.RTWButton.Location = new System.Drawing.Point(25, 32);
+            this.RTWButton.Name = "RTWButton";
+            this.RTWButton.Size = new System.Drawing.Size(153, 23);
+            this.RTWButton.TabIndex = 2;
+            this.RTWButton.Text = "Retaining Wall";
+            this.RTWButton.UseVisualStyleBackColor = true;
+            this.RTWButton.Click += new System.EventHandler(this.OnRTWButtonClick);
             // 
             // creationLabel
             // 
@@ -186,15 +198,15 @@ namespace ZeroTouchTekla
             this.TestButton.UseVisualStyleBackColor = true;
             this.TestButton.Click += new System.EventHandler(this.OnTestButtonClick);
             // 
-            // DoubledRTWButton
+            // RTWSButton
             // 
-            this.DoubledRTWButton.Location = new System.Drawing.Point(25, 61);
-            this.DoubledRTWButton.Name = "DoubledRTWButton";
-            this.DoubledRTWButton.Size = new System.Drawing.Size(153, 23);
-            this.DoubledRTWButton.TabIndex = 4;
-            this.DoubledRTWButton.Text = "Doubled Retaining Wall";
-            this.DoubledRTWButton.UseVisualStyleBackColor = true;
-            this.DoubledRTWButton.Click += new System.EventHandler(this.OnDoubleRTWButtonClick);
+            this.RTWSButton.Location = new System.Drawing.Point(25, 90);
+            this.RTWSButton.Name = "RTWSButton";
+            this.RTWSButton.Size = new System.Drawing.Size(153, 23);
+            this.RTWSButton.TabIndex = 5;
+            this.RTWSButton.Text = "Retaining Wall Step";
+            this.RTWSButton.UseVisualStyleBackColor = true;
+            this.RTWSButton.Click += new System.EventHandler(this.OnRetainingWallStepButtonClick);
             // 
             // MainForm
             // 
@@ -232,9 +244,10 @@ namespace ZeroTouchTekla
         private System.Windows.Forms.Label utilityLabel;
         private System.Windows.Forms.Panel panel1;
         private System.Windows.Forms.Label creationLabel;
-        private System.Windows.Forms.Button rtwRebarButton;
+        private System.Windows.Forms.Button RTWButton;
         private System.Windows.Forms.Button TestButton;
         private System.Windows.Forms.Button CollumnButton;
-        private System.Windows.Forms.Button DoubledRTWButton;
+        private System.Windows.Forms.Button RTWDButton;
+        private System.Windows.Forms.Button RTWSButton;
     }
 }

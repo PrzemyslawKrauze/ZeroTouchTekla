@@ -96,6 +96,10 @@ namespace ZeroTouchTekla
                             DRTW drtw = new DRTW(part,secondPart);
                             drtw.Create();
                             break;
+                        case ProfileType.RTWS:
+                            RTWS rtws = new RTWS(part);
+                            rtws.Create();
+                            break;
                         case ProfileType.CLMN:
                             CLMN clmn = new CLMN(part);
                             clmn.Create();
@@ -252,6 +256,7 @@ namespace ZeroTouchTekla
             FTG,
             RTW,
             DRTW,
+            RTWS,
             CLMN
         }
         public static int FatherID;

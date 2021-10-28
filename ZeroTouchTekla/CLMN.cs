@@ -593,7 +593,6 @@ namespace ZeroTouchTekla
         }
         #endregion
         #region Properties
-
         #endregion
         #region Fields
         enum RebarType
