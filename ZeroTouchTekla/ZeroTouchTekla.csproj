@@ -88,8 +88,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="CLMN.cs" />
-    <Compile Include="DRTW.cs" />
+    <Compile Include="Profiles\CLMN.cs" />
+    <Compile Include="Profiles\DRTW.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -97,12 +97,12 @@
     <Compile Include="MainForm.Designer.cs">
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="FTG.cs" />
+    <Compile Include="Profiles\FTG.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RebarCreator.cs" />
-    <Compile Include="RTW.cs" />
-    <Compile Include="RTWS.cs" />
+    <Compile Include="Profiles\RTW.cs" />
+    <Compile Include="Profiles\RTWS.cs" />
     <Compile Include="Utility.cs" />
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
