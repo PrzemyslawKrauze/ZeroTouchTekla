@@ -18,7 +18,7 @@ namespace ZeroTouchTekla
         new public static void GetProfilePointsAndParameters(Beam beam)
         {
             string[] profileValues = GetProfileValues(beam);
-            //RTWS Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight
+            //RTWS Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2
             Height = Convert.ToDouble(profileValues[0]);
             BottomHeight = Convert.ToDouble(profileValues[1]);
             SkewHeight = Convert.ToDouble(profileValues[2]);

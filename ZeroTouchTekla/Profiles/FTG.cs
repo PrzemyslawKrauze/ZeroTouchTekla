@@ -128,8 +128,8 @@ namespace ZeroTouchTekla
         void FullStirrups()
         {
             string rebarSize = Program.ExcelDictionary["S_Diameter"];
-            int rowSpacing = Convert.ToInt32(Program.ExcelDictionary["S_RowSpacing"]);
-            int barSpacing = Convert.ToInt32(Program.ExcelDictionary["S_BarSpacing"]);
+            double rowSpacing = Convert.ToDouble(Program.ExcelDictionary["S_RowSpacing"]) + Convert.ToDouble(rebarSize) / 2.0;
+            double barSpacing = Convert.ToDouble(Program.ExcelDictionary["S_BarSpacing"]) - Convert.ToDouble(rebarSize) / 2.0;
             int stirrupSpacing = Convert.ToInt32(Program.ExcelDictionary["S_StirrupSpacing"]);
 
             double length = Length;

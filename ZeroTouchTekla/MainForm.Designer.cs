@@ -39,12 +39,13 @@ namespace ZeroTouchTekla
             this.recreateRebarButton = new System.Windows.Forms.Button();
             this.utilityLabel = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.RTWSButton = new System.Windows.Forms.Button();
             this.RTWDButton = new System.Windows.Forms.Button();
             this.CollumnButton = new System.Windows.Forms.Button();
             this.RTWButton = new System.Windows.Forms.Button();
             this.creationLabel = new System.Windows.Forms.Label();
             this.TestButton = new System.Windows.Forms.Button();
-            this.RTWSButton = new System.Windows.Forms.Button();
+            this.AbutmentButton = new System.Windows.Forms.Button();
             this.utilityPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -138,6 +139,7 @@ namespace ZeroTouchTekla
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.AbutmentButton);
             this.panel1.Controls.Add(this.RTWSButton);
             this.panel1.Controls.Add(this.RTWDButton);
             this.panel1.Controls.Add(this.CollumnButton);
@@ -147,6 +149,16 @@ namespace ZeroTouchTekla
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 369);
             this.panel1.TabIndex = 9;
+            // 
+            // RTWSButton
+            // 
+            this.RTWSButton.Location = new System.Drawing.Point(25, 90);
+            this.RTWSButton.Name = "RTWSButton";
+            this.RTWSButton.Size = new System.Drawing.Size(153, 23);
+            this.RTWSButton.TabIndex = 5;
+            this.RTWSButton.Text = "Retaining Wall Step";
+            this.RTWSButton.UseVisualStyleBackColor = true;
+            this.RTWSButton.Click += new System.EventHandler(this.OnRetainingWallStepButtonClick);
             // 
             // RTWDButton
             // 
@@ -198,15 +210,15 @@ namespace ZeroTouchTekla
             this.TestButton.UseVisualStyleBackColor = true;
             this.TestButton.Click += new System.EventHandler(this.OnTestButtonClick);
             // 
-            // RTWSButton
+            // AbutmentButton
             // 
-            this.RTWSButton.Location = new System.Drawing.Point(25, 90);
-            this.RTWSButton.Name = "RTWSButton";
-            this.RTWSButton.Size = new System.Drawing.Size(153, 23);
-            this.RTWSButton.TabIndex = 5;
-            this.RTWSButton.Text = "Retaining Wall Step";
-            this.RTWSButton.UseVisualStyleBackColor = true;
-            this.RTWSButton.Click += new System.EventHandler(this.OnRetainingWallStepButtonClick);
+            this.AbutmentButton.Location = new System.Drawing.Point(25, 148);
+            this.AbutmentButton.Name = "AbutmentButton";
+            this.AbutmentButton.Size = new System.Drawing.Size(153, 23);
+            this.AbutmentButton.TabIndex = 6;
+            this.AbutmentButton.Text = "Abutment";
+            this.AbutmentButton.UseVisualStyleBackColor = true;
+            this.AbutmentButton.Click += new System.EventHandler(this.OnAbutmentButtonClick);
             // 
             // MainForm
             // 
@@ -249,5 +261,6 @@ namespace ZeroTouchTekla
         private System.Windows.Forms.Button CollumnButton;
         private System.Windows.Forms.Button RTWDButton;
         private System.Windows.Forms.Button RTWSButton;
+        private System.Windows.Forms.Button AbutmentButton;
     }
 }

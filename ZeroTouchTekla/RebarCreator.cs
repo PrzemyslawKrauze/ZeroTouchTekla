@@ -104,6 +104,10 @@ namespace ZeroTouchTekla
                             CLMN clmn = new CLMN(part);
                             clmn.Create();
                             break;
+                        case ProfileType.ABT:
+                            ABT abt = new ABT(part);
+                            abt.Create();
+                            break;
                     }
 
                     //Restore user work plane
@@ -123,22 +127,19 @@ namespace ZeroTouchTekla
         public static void RecreateRebar()
         {
             Model model = new Model();
-            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_REINFORCEMENT;
+            Tekla.Structures.Model.UI.Picker partPicker = new Tekla.Structures.Model.UI.Picker();
+            Tekla.Structures.Model.UI.Picker.PickObjectEnum partPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+
+            Tekla.Structures.Model.UI.Picker rebarPicker = new Tekla.Structures.Model.UI.Picker();
+            Tekla.Structures.Model.UI.Picker.PickObjectEnum rebarPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_REINFORCEMENT;
 
             try
             {
-                RebarSet rebarSet = picker.PickObject(pickObjectEnum) as RebarSet;
+                Beam beam = partPicker.PickObject(partPickObjectEnum) as Beam;
+
+                RebarSet rebarSet = rebarPicker.PickObject(rebarPickObjectEnum) as RebarSet;
                 rebarSet.GetUserProperty(RebarCreator.FatherIDName, ref FatherID);
                 string rebarName = rebarSet.RebarProperties.Name;
-
-                var singleRebars = Utility.ToList(rebarSet.GetReinforcements());
-                Type[] fatherTypes = new Type[] { typeof(Beam) };
-                ModelObjectEnumerator fatherEnumerator = model.GetModelObjectSelector().GetAllObjectsWithType(fatherTypes);
-                var fatherList = Utility.ToList(fatherEnumerator);
-                Beam beam = (from Beam b in fatherList
-                             where b.Identifier.ID == FatherID
-                             select b).FirstOrDefault();
 
                 string hostName = beam.Profile.ProfileString;
                 ProfileType profileType = GetProfileType(hostName);
@@ -152,7 +153,6 @@ namespace ZeroTouchTekla
                     List<RebarSet> selectedRebars = (from RebarSet r in rebarList
                                                      where Utility.GetUserProperty(r, FatherIDName) == beam.Identifier.ID
                                                      select r).ToList();
-
 
                     foreach (RebarSet rs in selectedRebars)
                     {
@@ -257,7 +257,8 @@ namespace ZeroTouchTekla
             RTW,
             DRTW,
             RTWS,
-            CLMN
+            CLMN,
+            ABT
         }
         public static int FatherID;
         static ProfileType GetProfileType(string profileString)

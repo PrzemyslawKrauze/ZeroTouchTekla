@@ -19,35 +19,29 @@ namespace ZeroTouchTekla
             string[] profileValues = GetProfileValues(beam);
             //RTW Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth
             //RTWVR Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth*Height2
-            double height = Convert.ToDouble(profileValues[0]);
-            double corniceHeight = Convert.ToDouble(profileValues[1]);
-            double bottomWidth = Convert.ToDouble(profileValues[2]);
-            double topWidth = Convert.ToDouble(profileValues[3]);
-            double corniceWidth = Convert.ToDouble(profileValues[4]);
-            double length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
-            double fullWidth = corniceWidth + bottomWidth;
-            double hToW = (bottomWidth - (topWidth - corniceWidth)) / height;
+            Height = Convert.ToDouble(profileValues[0]);
+            CorniceHeight = Convert.ToDouble(profileValues[1]);
+            BottomWidth = Convert.ToDouble(profileValues[2]);
+            TopWidth = Convert.ToDouble(profileValues[3]);
+            CorniceWidth = Convert.ToDouble(profileValues[4]);
+            Length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
+            double fullWidth = CorniceWidth + BottomWidth;
+            double hToW = (BottomWidth - (TopWidth - CorniceWidth)) / Height;
             double height2 = 0;
             if (profileValues.Length > 5)
             {
                 height2 = Convert.ToDouble(profileValues[5]);
             }
-            double bottomWidth2 = hToW * height2 + (topWidth- corniceWidth);
+            double bottomWidth2 = hToW * height2 + (TopWidth- CorniceWidth);
 
-            Height = height;
-            CorniceHeight = corniceHeight;
-            BottomWidth = bottomWidth;
-            TopWidth = topWidth;
-            CorniceWidth = corniceWidth;
-            Length = length;
             Height2 = height2;
 
-            Point p0 = new Point(0, -height / 2.0, fullWidth / 2.0 - corniceWidth);
-            Point p1 = new Point(0, height / 2.0 - corniceHeight, p0.Z);
-            Point p2 = new Point(0, p1.Y, p1.Z + corniceWidth);
-            Point p3 = new Point(0, p2.Y + corniceHeight, p2.Z);
-            Point p4 = new Point(0, p3.Y, p3.Z - topWidth);
-            Point p5 = new Point(0, -height / 2.0, -fullWidth / 2.0);
+            Point p0 = new Point(0, -Height / 2.0, fullWidth / 2.0 - CorniceWidth);
+            Point p1 = new Point(0, Height / 2.0 - CorniceHeight, p0.Z);
+            Point p2 = new Point(0, p1.Y, p1.Z + CorniceWidth);
+            Point p3 = new Point(0, p2.Y + CorniceHeight, p2.Z);
+            Point p4 = new Point(0, p3.Y, p3.Z - TopWidth);
+            Point p5 = new Point(0, -Height / 2.0, -fullWidth / 2.0);
 
             List<Point> firstProfile = new List<Point> { p0, p1, p2, p3, p4, p5 };
 
@@ -57,18 +51,18 @@ namespace ZeroTouchTekla
                 foreach (Point p in firstProfile)
                 {
                     Point secondPoint = new Point(p.X, p.Y, p.Z);
-                    secondPoint.Translate(length, 0, 0);
+                    secondPoint.Translate(Length, 0, 0);
                     secondProfile.Add(secondPoint);
                 }
             }
             else
             {
-                Point s0 = new Point(length, -height/ 2.0, fullWidth / 2.0 - corniceWidth);
-                Point s1 = new Point(length, s0.Y+ height2- corniceHeight, s0.Z);
-                Point s2 = new Point(length, s1.Y, p1.Z + corniceWidth);
-                Point s3 = new Point(length, s2.Y + corniceHeight, s2.Z);
-                Point s4 = new Point(length, s3.Y, s3.Z - topWidth);
-                Point s5 = new Point(length, -height / 2.0, s0.Z-bottomWidth2);
+                Point s0 = new Point(Length, -Height/ 2.0, fullWidth / 2.0 - CorniceWidth);
+                Point s1 = new Point(Length, s0.Y+ height2- CorniceHeight, s0.Z);
+                Point s2 = new Point(Length, s1.Y, p1.Z + CorniceWidth);
+                Point s3 = new Point(Length, s2.Y + CorniceHeight, s2.Z);
+                Point s4 = new Point(Length, s3.Y, s3.Z - TopWidth);
+                Point s5 = new Point(Length, -Height / 2.0, s0.Z-bottomWidth2);
                 secondProfile = new List<Point> { s0, s1, s2, s3, s4, s5 };
             }
             List<List<Point>> beamPoints = new List<List<Point>> { firstProfile, secondProfile };
