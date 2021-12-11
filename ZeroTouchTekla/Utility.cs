@@ -111,5 +111,27 @@ namespace ZeroTouchTekla
             Point translatedPoint = new Point(point.X + vector.X * distance, point.Y + vector.Y * distance, point.Z + vector.Z * distance);
             return translatedPoint;
         }
+        public static Point Translate(Point p,Vector v)
+        {
+            Point pt = new Point(p.X + v.X, p.Y + v.Y, p.Z + v.Z);
+            return pt;
+        }
+        public static Point Translate(Point p, Vector unitVector,double d)
+        {
+            unitVector = unitVector * d;
+            Point pt = new Point(p.X + unitVector.X, p.Y + unitVector.Y, p.Z + unitVector.Z);
+            return pt;
+        }
+
+        public static Point GetExtendedIntersection(Line line,GeometricPlane plane, double multip)
+        {
+            Point p1 = line.Origin;
+            Vector dir = line.Direction;
+            Point p1s = Translate(p1, dir, multip);
+            Point p1e = Translate(p1, dir, -multip);
+            LineSegment extendedLine = new LineSegment(p1s, p1e);
+            Point intersection = Intersection.LineSegmentToPlane(extendedLine, plane);
+            return intersection;
+        }
     }
 }

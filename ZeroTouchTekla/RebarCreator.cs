@@ -1,12 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-
-using Tekla.Structures;
+using System.IO;
+using Tekla.Structures.Filtering;
+using Tekla.Structures.Filtering.Categories;
 using Tekla.Structures.Model;
-using Tekla.Structures.Geometry3d;
 using Tekla.Structures.Model.Operations;
 
 
@@ -17,17 +15,31 @@ namespace ZeroTouchTekla
         public static void Test()
         {
             Model model = new Model();
-            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_REINFORCEMENT;
-            RebarSet rebarSet = picker.PickObject(pickObjectEnum) as RebarSet;
-            int mlsi = 90;
-            double mlsd = 90;
-            string mlss = "";
-            rebarSet.GetUserProperty(RebarCreator.FatherIDName, ref mlsi);
-            rebarSet.GetUserProperty(RebarCreator.FatherIDName, ref mlsd);
-            rebarSet.GetUserProperty(RebarCreator.FatherIDName, ref mlss);
+            ModelInfo info = model.GetInfo();
+            
+            // Creates the filter expressions
+            PartFilterExpressions.Class partClass = new PartFilterExpressions.Class();
+            NumericConstantFilterExpression Beam1 = new NumericConstantFilterExpression(10);
+            var binaryFilterExpression =new BinaryFilterExpression(partClass, NumericOperatorType.IS_EQUAL, Beam1);
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, "asd");
+            BinaryFilterExpressionCollection binaryFilterCollection = new BinaryFilterExpressionCollection();
+            binaryFilterCollection.Add(new BinaryFilterExpressionItem(binaryFilterExpression));
+
+            string attributesPath = Path.Combine(info.ModelPath, "attributes");
+            string filterName = Path.Combine(attributesPath, "ZTBFilter");
+            Filter filter = new Filter(binaryFilterCollection);
+
+            filter.CreateFile(FilterExpressionFileType.OBJECT_GROUP_VIEW, filterName);
+            var views = Tekla.Structures.Model.UI.ViewHandler.GetVisibleViews();
+            views.MoveNext();
+            var view = views.Current;
+            //Tekla.Structures.Model.UI.ViewCamera Camera = new Tekla.Structures.Model.UI.ViewCamera();
+           // Camera.View = view;
+            view.ViewFilter = "ZTBFilter";
+            //Camera.Select();
+            view.Modify();
+           // Camera.Modify();
+
         }
         public static void Test2()
         {
