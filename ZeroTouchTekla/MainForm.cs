@@ -108,5 +108,10 @@ namespace ZeroTouchTekla
         {
             RebarCreator.Create(RebarCreator.ProfileType.ABT);
         }
+
+        private void OnDoubledAbutmentClick(object sender, EventArgs e)
+        {
+            RebarCreator.Create(RebarCreator.ProfileType.DABT);
+        }
     }
 }

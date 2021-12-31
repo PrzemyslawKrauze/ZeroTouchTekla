@@ -6,6 +6,7 @@ using Tekla.Structures.Filtering;
 using Tekla.Structures.Filtering.Categories;
 using Tekla.Structures.Model;
 using Tekla.Structures.Model.Operations;
+using ZeroTouchTekla.Profiles;
 
 
 namespace ZeroTouchTekla
@@ -16,11 +17,11 @@ namespace ZeroTouchTekla
         {
             Model model = new Model();
             ModelInfo info = model.GetInfo();
-            
+
             // Creates the filter expressions
             PartFilterExpressions.Class partClass = new PartFilterExpressions.Class();
             NumericConstantFilterExpression Beam1 = new NumericConstantFilterExpression(10);
-            var binaryFilterExpression =new BinaryFilterExpression(partClass, NumericOperatorType.IS_EQUAL, Beam1);
+            var binaryFilterExpression = new BinaryFilterExpression(partClass, NumericOperatorType.IS_EQUAL, Beam1);
 
             BinaryFilterExpressionCollection binaryFilterCollection = new BinaryFilterExpressionCollection();
             binaryFilterCollection.Add(new BinaryFilterExpressionItem(binaryFilterExpression));
@@ -34,11 +35,11 @@ namespace ZeroTouchTekla
             views.MoveNext();
             var view = views.Current;
             //Tekla.Structures.Model.UI.ViewCamera Camera = new Tekla.Structures.Model.UI.ViewCamera();
-           // Camera.View = view;
+            // Camera.View = view;
             view.ViewFilter = "ZTBFilter";
             //Camera.Select();
             view.Modify();
-           // Camera.Modify();
+            // Camera.Modify();
 
         }
         public static void Test2()
@@ -91,6 +92,9 @@ namespace ZeroTouchTekla
                     TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
                     model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
 
+                    Tekla.Structures.Model.UI.Picker secondPicker;
+                    Tekla.Structures.Model.UI.Picker.PickObjectEnum secondPickObjectEnum;
+                    Beam secondPart;
                     switch (profileType)
                     {
                         case ProfileType.FTG:
@@ -102,10 +106,10 @@ namespace ZeroTouchTekla
                             rtw.Create();
                             break;
                         case ProfileType.DRTW:
-                            Tekla.Structures.Model.UI.Picker secondPicker = new Tekla.Structures.Model.UI.Picker();
-                            Tekla.Structures.Model.UI.Picker.PickObjectEnum secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-                            Beam secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
-                            DRTW drtw = new DRTW(part,secondPart);
+                            secondPicker = new Tekla.Structures.Model.UI.Picker();
+                            secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+                            secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
+                            DRTW drtw = new DRTW(part, secondPart);
                             drtw.Create();
                             break;
                         case ProfileType.RTWS:
@@ -120,6 +124,13 @@ namespace ZeroTouchTekla
                             ABT abt = new ABT(part);
                             abt.Create();
                             break;
+                        case ProfileType.DABT:
+                            secondPicker = new Tekla.Structures.Model.UI.Picker();
+                            secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+                            secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
+                            DABT dabt = new DABT(part, secondPart);
+                            dabt.Create();
+                            break;
                     }
 
                     //Restore user work plane
@@ -131,7 +142,7 @@ namespace ZeroTouchTekla
                 ChangeLayer(model);
                 LayerDictionary = new Dictionary<int, int[]>();
             }
-            catch(System.ApplicationException)
+            catch (System.ApplicationException)
             {
                 Operation.DisplayPrompt("User interrupted!");
             }
@@ -219,11 +230,11 @@ namespace ZeroTouchTekla
                     LayerDictionary = new Dictionary<int, int[]>();
                 }
             }
-            catch(System.ApplicationException)
+            catch (System.ApplicationException)
             {
                 Operation.DisplayPrompt("User interrupted!");
             }
-          
+
         }
         static void ChangeLayer(Model model)
         {
@@ -258,7 +269,7 @@ namespace ZeroTouchTekla
                     }
                 }
             }
-            
+
         }
 
         public static Dictionary<int, int[]> LayerDictionary = new Dictionary<int, int[]>();
@@ -270,7 +281,8 @@ namespace ZeroTouchTekla
             DRTW,
             RTWS,
             CLMN,
-            ABT
+            ABT,
+            DABT
         }
         public static int FatherID;
         static ProfileType GetProfileType(string profileString)
@@ -287,7 +299,7 @@ namespace ZeroTouchTekla
                 }
                 else
                 {
-                    if(profileString.Contains("CLMN"))
+                    if (profileString.Contains("CLMN"))
                     {
                         return ProfileType.CLMN;
                     }

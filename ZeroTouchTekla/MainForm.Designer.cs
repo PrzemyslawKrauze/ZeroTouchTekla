@@ -39,13 +39,14 @@ namespace ZeroTouchTekla
             this.recreateRebarButton = new System.Windows.Forms.Button();
             this.utilityLabel = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
+            this.AbutmentButton = new System.Windows.Forms.Button();
             this.RTWSButton = new System.Windows.Forms.Button();
             this.RTWDButton = new System.Windows.Forms.Button();
             this.CollumnButton = new System.Windows.Forms.Button();
             this.RTWButton = new System.Windows.Forms.Button();
             this.creationLabel = new System.Windows.Forms.Label();
             this.TestButton = new System.Windows.Forms.Button();
-            this.AbutmentButton = new System.Windows.Forms.Button();
+            this.DoubledAbutmentButton = new System.Windows.Forms.Button();
             this.utilityPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -139,6 +140,7 @@ namespace ZeroTouchTekla
             // 
             // panel1
             // 
+            this.panel1.Controls.Add(this.DoubledAbutmentButton);
             this.panel1.Controls.Add(this.AbutmentButton);
             this.panel1.Controls.Add(this.RTWSButton);
             this.panel1.Controls.Add(this.RTWDButton);
@@ -149,6 +151,16 @@ namespace ZeroTouchTekla
             this.panel1.Name = "panel1";
             this.panel1.Size = new System.Drawing.Size(200, 369);
             this.panel1.TabIndex = 9;
+            // 
+            // AbutmentButton
+            // 
+            this.AbutmentButton.Location = new System.Drawing.Point(25, 148);
+            this.AbutmentButton.Name = "AbutmentButton";
+            this.AbutmentButton.Size = new System.Drawing.Size(153, 23);
+            this.AbutmentButton.TabIndex = 6;
+            this.AbutmentButton.Text = "Abutment";
+            this.AbutmentButton.UseVisualStyleBackColor = true;
+            this.AbutmentButton.Click += new System.EventHandler(this.OnAbutmentButtonClick);
             // 
             // RTWSButton
             // 
@@ -210,15 +222,15 @@ namespace ZeroTouchTekla
             this.TestButton.UseVisualStyleBackColor = true;
             this.TestButton.Click += new System.EventHandler(this.OnTestButtonClick);
             // 
-            // AbutmentButton
+            // DoubledAbutmentButton
             // 
-            this.AbutmentButton.Location = new System.Drawing.Point(25, 148);
-            this.AbutmentButton.Name = "AbutmentButton";
-            this.AbutmentButton.Size = new System.Drawing.Size(153, 23);
-            this.AbutmentButton.TabIndex = 6;
-            this.AbutmentButton.Text = "Abutment";
-            this.AbutmentButton.UseVisualStyleBackColor = true;
-            this.AbutmentButton.Click += new System.EventHandler(this.OnAbutmentButtonClick);
+            this.DoubledAbutmentButton.Location = new System.Drawing.Point(25, 177);
+            this.DoubledAbutmentButton.Name = "DoubledAbutmentButton";
+            this.DoubledAbutmentButton.Size = new System.Drawing.Size(153, 23);
+            this.DoubledAbutmentButton.TabIndex = 7;
+            this.DoubledAbutmentButton.Text = "DoubledAbutment";
+            this.DoubledAbutmentButton.UseVisualStyleBackColor = true;
+            this.DoubledAbutmentButton.Click += new System.EventHandler(this.OnDoubledAbutmentClick);
             // 
             // MainForm
             // 
@@ -262,5 +274,6 @@ namespace ZeroTouchTekla
         private System.Windows.Forms.Button RTWDButton;
         private System.Windows.Forms.Button RTWSButton;
         private System.Windows.Forms.Button AbutmentButton;
+        private System.Windows.Forms.Button DoubledAbutmentButton;
     }
 }

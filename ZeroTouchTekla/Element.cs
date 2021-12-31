@@ -52,6 +52,10 @@ namespace ZeroTouchTekla
                 return 4 * diameter;
             }
         }
+        protected static double GetHookLength(double diameter)
+        {
+            return 10 * diameter;
+        }
         protected static int SetClass(double diameter)
         {
             switch (diameter)
@@ -75,8 +79,8 @@ namespace ZeroTouchTekla
             }
         }
 
-        protected static List<List<Point>> ProfilePoints;
-        protected static Dictionary<string, double> ProfileParameters;
+        protected static List<List<Point>> ProfilePoints = new List<List<Point>>();
+        protected static Dictionary<string, double> ProfileParameters = new Dictionary<string, double>();
         public static double SideCover = 0;
         public static double BottomCover = 0;
         public static double TopCover = 0;

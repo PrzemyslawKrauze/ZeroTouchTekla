@@ -4,7 +4,7 @@ using Tekla.Structures.Geometry3d;
 using Tekla.Structures.Model;
 
 
-namespace ZeroTouchTekla
+namespace ZeroTouchTekla.Profiles
 {
     public class RTWS : Element
     {
