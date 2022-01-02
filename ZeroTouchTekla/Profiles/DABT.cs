@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Tekla.Structures.Geometry3d;
 using Tekla.Structures.Model;
+using System.Linq;
 
 namespace ZeroTouchTekla.Profiles
 {
@@ -34,10 +35,29 @@ namespace ZeroTouchTekla.Profiles
             CantileverLongitudinalRebar(0);
             CantileverLongitudinalRebar(1);
             CantileverLongitudinalRebar(2);
+            BackwallLongitudinalRebar(0);
+            BackwallLongitudinalRebar(1);
+            BackwallLongitudinalRebar(2);
+            ShelfLongitudinalRebar();
+            ClosingCShapeRebarBottom(0);
+            ClosingCShapeRebarBottom(2);
+            ClosingCShapeRebarMid(0);
+            ClosingCShapeRebarMid(2);
+            ClosingCShapeRebarTop(0);
+            ClosingCShapeRebarTop(2);
+            CShapeRebarCommon();
+            ClosingLongitudianlRebarBottom(0);
+            ClosingLongitudianlRebarBottom(2);
+            ClosingLongitudianlRebarMid(0);
+            ClosingLongitudianlRebarMid(2);
+            ClosingLongitudianlRebarTop(0);
+            ClosingLongitudianlRebarTop(2);
+            ClosingLongitudianlRebarTop2(0);
+            ClosingLongitudianlRebarTop2(2);
         }
         #endregion
         #region PrivateMethods  
-        public static void GetProfilePointsAndParameters(Beam beam,Beam secondBeam)
+        public static void GetProfilePointsAndParameters(Beam beam, Beam secondBeam)
         {
             string[] profileValues = GetProfileValues(beam);
             string[] secondProfileValues = GetProfileValues(secondBeam);
@@ -75,7 +95,7 @@ namespace ZeroTouchTekla.Profiles
                 BackwallBottomHeight2 = BackwallBottomHeight;
             }
 
-            if(secondProfileValues.Length>11)
+            if (secondProfileValues.Length > 11)
             {
                 Height3 = Convert.ToDouble(secondProfileValues[11]);
                 FrontHeight3 = Convert.ToDouble(secondProfileValues[12]);
@@ -131,7 +151,7 @@ namespace ZeroTouchTekla.Profiles
                 secondProfile.AddRange(new List<Point> { n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 });
             }
             List<Point> thirdProfile = new List<Point>();
-            if (Height3==Height2)
+            if (Height3 == Height2)
             {
                 foreach (Point p in secondProfile)
                 {
@@ -155,7 +175,7 @@ namespace ZeroTouchTekla.Profiles
                 thirdProfile.AddRange(new List<Point> { n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 });
             }
 
-            List<List<Point>> beamPoints = new List<List<Point>> { firstProfile, secondProfile,thirdProfile };
+            List<List<Point>> beamPoints = new List<List<Point>> { firstProfile, secondProfile, thirdProfile };
             ProfilePoints.AddRange(beamPoints);
 
         }
@@ -883,17 +903,26 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = startOffset;
             guideline.Spacing.EndOffset = 100;
 
-            guideline.Curve.AddContourPoint(new ContourPoint(p0s, null));
-            guideline.Curve.AddContourPoint(new ContourPoint(p1s, null));
-            rebarSet.Guidelines.Add(guideline);           
+            Point startGL, endGL;
+            if (Height > Height2 && Height > Height3)
+            {
+                startGL = p0s;
+                endGL = p1s;
+            }
+            else if (Height2 > Height3)
+            {
+                startGL = p0m;
+                endGL = p1m;
+            }
+            else
+            {
+                startGL = p0e;
+                endGL = p1e;
+            }
 
-            var secondGuideline = new RebarGuideline();
-            secondGuideline.Spacing.InheritFromPrimary = true;
-            secondGuideline.Spacing.StartOffset = startOffset;
-            secondGuideline.Spacing.EndOffset = 100;
-            secondGuideline.Curve.AddContourPoint(new ContourPoint(p0m, null));
-            secondGuideline.Curve.AddContourPoint(new ContourPoint(p1m, null));
-            rebarSet.Guidelines.Add(secondGuideline);
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endGL, null));
+            rebarSet.Guidelines.Add(guideline);
 
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
@@ -955,8 +984,25 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = startOffset;
             guideline.Spacing.EndOffset = 0;
 
-            guideline.Curve.AddContourPoint(new ContourPoint(p9s, null));
-            guideline.Curve.AddContourPoint(new ContourPoint(p8s, null));
+            Point startGL, endGL;
+            if (Height > Height2 && Height > Height3)
+            {
+                startGL = p9s;
+                endGL = p8s;
+            }
+            else if (Height2 > Height3)
+            {
+                startGL = p9m;
+                endGL = p8m;
+            }
+            else
+            {
+                startGL = p9e;
+                endGL = p8e;
+            }
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endGL, null));
 
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
@@ -1002,7 +1048,7 @@ namespace ZeroTouchTekla.Profiles
             Point p5m = ProfilePoints[1][5];
             Point p5e = ProfilePoints[2][5];
 
-            Point startGL, endGL, startSGL, endSGL, startTGL, endTGL;
+            Point startGL, endGL;
             if (number == 1)
             {
                 var firstFace = new RebarLegFace();
@@ -1013,12 +1059,21 @@ namespace ZeroTouchTekla.Profiles
                 firstFace.Contour.AddContourPoint(new ContourPoint(p7m, null));
                 firstFace.Contour.AddContourPoint(new ContourPoint(p7s, null));
                 rebarSet.LegFaces.Add(firstFace);
-                startGL = p8s;
-                endGL = p7s;
-                startSGL = p8m;
-                endSGL = p7m;
-                startTGL = p8e;
-                endTGL = p7e;
+                if (Height > Height2 && Height > Height3)
+                {
+                    startGL = p8s;
+                    endGL = p7s;
+                }
+                else if (Height2 > Height3)
+                {
+                    startGL = p8m;
+                    endGL = p7m;
+                }
+                else
+                {
+                    startGL = p8e;
+                    endGL = p7e;
+                }
             }
             else if (number == 2)
             {
@@ -1030,12 +1085,21 @@ namespace ZeroTouchTekla.Profiles
                 secondFace.Contour.AddContourPoint(new ContourPoint(p6m, null));
                 secondFace.Contour.AddContourPoint(new ContourPoint(p6s, null));
                 rebarSet.LegFaces.Add(secondFace);
-                startGL = p7s;
-                endGL = p6s;
-                startSGL = p7m;
-                endSGL = p6m;
-                startTGL = p7e;
-                endTGL = p6e;
+                if (Height > Height2 && Height > Height3)
+                {
+                    startGL = p7s;
+                    endGL = p6s;
+                }
+                else if (Height2 > Height3)
+                {
+                    startGL = p7m;
+                    endGL = p6m;
+                }
+                else
+                {
+                    startGL = p7e;
+                    endGL = p6e;
+                }
             }
             else
             {
@@ -1047,12 +1111,167 @@ namespace ZeroTouchTekla.Profiles
                 thirdFace.Contour.AddContourPoint(new ContourPoint(p5m, null));
                 thirdFace.Contour.AddContourPoint(new ContourPoint(p5s, null));
                 rebarSet.LegFaces.Add(thirdFace);
-                startGL = p6s;
-                endGL = p5s;
-                startSGL = p6m;
-                endSGL = p5m;
-                startTGL = p6e;
-                endTGL = p5e;
+                if (Height > Height2 && Height > Height3)
+                {
+                    startGL = p6s;
+                    endGL = p5s;
+                }
+                else if (Height2 > Height3)
+                {
+                    startGL = p6m;
+                    endGL = p5m;
+                }
+                else
+                {
+                    startGL = p6e;
+                    endGL = p5e;
+                }
+            }
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = number == 1 ? 0 : 100;
+            guideline.Spacing.EndOffset = number == 3 ? 0 : 100;
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endGL, null));
+            rebarSet.Guidelines.Add(guideline);
+
+            bool succes = rebarSet.Insert();
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
+        }
+        void BackwallLongitudinalRebar(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["BLR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["BLR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_BLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 1;
+
+            Point p4s = ProfilePoints[0][4];
+            Point p4m = ProfilePoints[1][4];
+            Point p4e = ProfilePoints[2][4];
+            Point p3s = ProfilePoints[0][3];
+            Point p3m = ProfilePoints[1][3];
+            Point p3e = ProfilePoints[2][3];
+            Point p2s = ProfilePoints[0][2];
+            Point p2m = ProfilePoints[1][2];
+            Point p2e = ProfilePoints[2][2];
+            Point p5s = ProfilePoints[0][5];
+            Point p5m = ProfilePoints[1][5];
+            Point p5e = ProfilePoints[2][5];
+
+            Point startGL;
+            Point endGL;
+
+            if (number == 1)
+            {
+                var firstFace = new RebarLegFace();
+                firstFace.Contour.AddContourPoint(new ContourPoint(p2s, null));
+                firstFace.Contour.AddContourPoint(new ContourPoint(p2m, null));
+                firstFace.Contour.AddContourPoint(new ContourPoint(p2e, null));
+                firstFace.Contour.AddContourPoint(new ContourPoint(p3e, null));
+                firstFace.Contour.AddContourPoint(new ContourPoint(p3m, null));
+                firstFace.Contour.AddContourPoint(new ContourPoint(p3s, null));
+                rebarSet.LegFaces.Add(firstFace);
+                if (Height > Height2 && Height > Height3)
+                {
+                    startGL = p2s;
+                    endGL = p3s;
+                }
+                else if (Height2 > Height3)
+                {
+                    startGL = p2m;
+                    endGL = p3m;
+                }
+                else
+                {
+                    startGL = p2e;
+                    endGL = p3e;
+                }
+            }
+            else if (number == 2)
+            {
+                var secondFace = new RebarLegFace();
+                secondFace.Contour.AddContourPoint(new ContourPoint(p3s, null));
+                secondFace.Contour.AddContourPoint(new ContourPoint(p3m, null));
+                secondFace.Contour.AddContourPoint(new ContourPoint(p4m, null));
+                secondFace.Contour.AddContourPoint(new ContourPoint(p4s, null));
+                rebarSet.LegFaces.Add(secondFace);
+                var secondFace2 = new RebarLegFace();
+                secondFace2.Contour.AddContourPoint(new ContourPoint(p3m, null));
+                secondFace2.Contour.AddContourPoint(new ContourPoint(p3e, null));
+                secondFace2.Contour.AddContourPoint(new ContourPoint(p4e, null));
+                secondFace2.Contour.AddContourPoint(new ContourPoint(p4m, null));
+                rebarSet.LegFaces.Add(secondFace2);
+                if (Height > Height2 && Height > Height3)
+                {
+                    startGL = p3s;
+                    endGL = p4s;
+                }
+                else if (Height2 > Height3)
+                {
+                    startGL = p3m;
+                    endGL = p4m;
+                }
+                else
+                {
+                    startGL = p3e;
+                    endGL = p4e;
+                }
+            }
+            else
+            {
+                var thirdFace = new RebarLegFace();
+                thirdFace.Contour.AddContourPoint(new ContourPoint(p4s, null));
+                thirdFace.Contour.AddContourPoint(new ContourPoint(p4m, null));
+                thirdFace.Contour.AddContourPoint(new ContourPoint(p4e, null));
+                thirdFace.Contour.AddContourPoint(new ContourPoint(p5e, null));
+                thirdFace.Contour.AddContourPoint(new ContourPoint(p5m, null));
+                thirdFace.Contour.AddContourPoint(new ContourPoint(p5s, null));
+                rebarSet.LegFaces.Add(thirdFace);
+                double minY;
+                if (p5s.Y < p5m.Y && p5s.Y < p5e.Y)
+                {
+                    minY = p5s.Y;
+                }
+                else if (p5m.Y < p5e.Y)
+                {
+                    minY = p5m.Y;
+                }
+                else
+                {
+                    minY = p5e.Y;
+                }
+                if (Height > Height2 && Height > Height3)
+                {
+                    startGL = p4s;
+                    endGL = new Point(p5s.X, minY, p5s.Z);
+                }
+                else if (Height2 > Height3)
+                {
+                    startGL = p4m;
+                    endGL = new Point(p5m.X, minY, p5m.Z);
+                }
+                else
+                {
+                    startGL = p4e;
+                    endGL = new Point(p5e.X, minY, p5e.Z);
+                }
             }
 
             var guideline = new RebarGuideline();
@@ -1068,29 +1287,1036 @@ namespace ZeroTouchTekla.Profiles
 
             guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
             guideline.Curve.AddContourPoint(new ContourPoint(endGL, null));
+
             rebarSet.Guidelines.Add(guideline);
-
-            var secondGuideLine = new RebarGuideline();
-            secondGuideLine.Spacing.InheritFromPrimary = true;
-            secondGuideLine.Spacing.StartOffset = number == 1 ? 0 : 100;
-            secondGuideLine.Spacing.EndOffset = number == 3 ? 0 : 100;
-            secondGuideLine.Curve.AddContourPoint(new ContourPoint(startSGL, null));
-            secondGuideLine.Curve.AddContourPoint(new ContourPoint(endSGL, null));
-            rebarSet.Guidelines.Add(secondGuideLine);
-
-            var thirdGuideLine = new RebarGuideline();
-            thirdGuideLine.Spacing.InheritFromPrimary = true;
-            thirdGuideLine.Spacing.StartOffset = number == 1 ? 0 : 100;
-            thirdGuideLine.Spacing.EndOffset = number == 3 ? 0 : 100;
-            thirdGuideLine.Curve.AddContourPoint(new ContourPoint(startTGL, null));
-            thirdGuideLine.Curve.AddContourPoint(new ContourPoint(endTGL, null));
-            rebarSet.Guidelines.Add(thirdGuideLine);
-
             bool succes = rebarSet.Insert();
 
             new Model().CommitChanges();
             rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
+            if (number == 2)
+            {
+                RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2 });
+            }
+            else
+            {
+                RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
+            }
+        }
+        void ShelfLongitudinalRebar()
+        {
+            string rebarSize = Program.ExcelDictionary["SLR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["SLR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_SLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            Point p1s = ProfilePoints[0][1];
+            Point p1m = ProfilePoints[1][1];
+            Point p1e = ProfilePoints[2][1];
+            Point p2s = ProfilePoints[0][2];
+            Point p2m = ProfilePoints[1][2];
+            Point p2e = ProfilePoints[2][2];
+
+            var firstFace = new RebarLegFace();
+            firstFace.Contour.AddContourPoint(new ContourPoint(p1s, null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(p1m, null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(p2m, null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(p2s, null));
+            rebarSet.LegFaces.Add(firstFace);
+
+            var secondFace = new RebarLegFace();
+            secondFace.Contour.AddContourPoint(new ContourPoint(p1m, null));
+            secondFace.Contour.AddContourPoint(new ContourPoint(p1e, null));
+            secondFace.Contour.AddContourPoint(new ContourPoint(p2e, null));
+            secondFace.Contour.AddContourPoint(new ContourPoint(p2m, null));
+            rebarSet.LegFaces.Add(secondFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 0;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(p1s, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p2s, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2,2 });
+        }
+        /// <summary>
+        /// Create closing C shape rebar
+        /// </summary>
+        /// <param name="number">0 for start section, 1 for end</param>
+        void ClosingCShapeRebarBottom(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CCSR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CCSR_Spacing"];
+            double offset = Convert.ToDouble(Program.ExcelDictionary["ILR_StartOffset"]);
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CCSRB";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = number == 0 ? 2 : 0;
+            Point p0 = ProfilePoints[number][0];
+            Point p1 = ProfilePoints[number][1];
+            Point p3 = ProfilePoints[number][3];
+            Point p4 = ProfilePoints[number][4];
+            Point p5 = ProfilePoints[number][5];
+            Point p6 = ProfilePoints[number][6];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+            Point p9 = ProfilePoints[number][9];
+            Point p2 = new Point(p7.X, p1.Y, p7.Z);
+
+            List<Point> listPoint = new List<Point> { p0, p1, p2, p3, p4, p5, p6, p7, p8, p9 };
+
+            Point p0e = ProfilePoints[secondNumber][0];
+
+            Vector sectionDir = Utility.GetVectorFromTwoPoints(p0, p0e).GetNormal();
+            List<Point> offsetedPoints = new List<Point>();
+            for (int i = 0; i < listPoint.Count; i++)
+            {
+                Point correctedPoint = Utility.TranslePointByVectorAndDistance(listPoint[i], sectionDir, 2 * GetHookLength(rebarDiameter));
+                offsetedPoints.Add(correctedPoint);
+            }
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p0, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p1, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p8, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p9, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var firstFace = new RebarLegFace();
+            firstFace.Contour.AddContourPoint(new ContourPoint(p0, null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[0], null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[1], null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(p1, null));
+            rebarSet.LegFaces.Add(firstFace);
+
+            var fourthFace = new RebarLegFace();
+            fourthFace.Contour.AddContourPoint(new ContourPoint(p9, null));
+            fourthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[9], null));
+            fourthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[8], null));
+            fourthFace.Contour.AddContourPoint(new ContourPoint(p8, null));
+            rebarSet.LegFaces.Add(fourthFace);
+
+            var fifthFace = new RebarLegFace();
+            fifthFace.Contour.AddContourPoint(new ContourPoint(p8, null));
+            fifthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[8], null));
+            fifthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[7], null));
+            fifthFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            rebarSet.LegFaces.Add(fifthFace);
+
+            var sixthFace = new RebarLegFace();
+            sixthFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            sixthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[7], null));
+            sixthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[2], null));
+            sixthFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            rebarSet.LegFaces.Add(sixthFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(p0, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p1, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var firstEndDetailModifier = new RebarEndDetailModifier();
+            firstEndDetailModifier.Father = rebarSet;
+            firstEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            firstEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            firstEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[0], null));
+            firstEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[1], null));
+            firstEndDetailModifier.Insert();
+
+            var secondEndDetailModifier = new RebarEndDetailModifier();
+            secondEndDetailModifier.Father = rebarSet;
+            secondEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            secondEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[9], null));
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[8], null));
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[7], null));
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[2], null));
+            secondEndDetailModifier.Insert();
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2, 2, 2 });
+        }
+        void ClosingCShapeRebarMid(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CCSR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CCSR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CCSRM";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = number == 0 ? 2 : 0;
+            Point p0 = ProfilePoints[number][0];
+            Point p1 = ProfilePoints[number][1];
+            Point p2 = ProfilePoints[number][2];
+            Point p3 = ProfilePoints[number][3];
+            Point p4 = ProfilePoints[number][4];
+            Point p5 = ProfilePoints[number][5];
+            Point p6 = ProfilePoints[number][6];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+            Point p9 = ProfilePoints[number][9];
+            p2 = new Point(p2.X, p1.Y, p2.Z);
+            p7 = new Point(p7.X, p1.Y, p7.Z);
+            p3 = new Point(p3.X, p6.Y, p3.Z);
+
+            List<Point> listPoint = new List<Point> { p0, p1, p2, p3, p4, p5, p6, p7, p8, p9 };
+
+            Point p0e = ProfilePoints[secondNumber][0];
+
+            Vector sectionDir = Utility.GetVectorFromTwoPoints(p0, p0e).GetNormal();
+            List<Point> offsetedPoints = new List<Point>();
+            for (int i = 0; i < listPoint.Count; i++)
+            {
+                Point correctedPoint = Utility.TranslePointByVectorAndDistance(listPoint[i], sectionDir, 2 * GetHookLength(rebarDiameter));
+                offsetedPoints.Add(correctedPoint);
+            }
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p3, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p6, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var thirdFace = new RebarLegFace();
+            thirdFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[2], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[3], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(p3, null));
+            rebarSet.LegFaces.Add(thirdFace);
+
+            var sixthFace = new RebarLegFace();
+            sixthFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            sixthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[7], null));
+            sixthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[6], null));
+            sixthFace.Contour.AddContourPoint(new ContourPoint(p6, null));
+            rebarSet.LegFaces.Add(sixthFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 0;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(p2, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p3, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var thirdEndDetailModifier = new RebarEndDetailModifier();
+            thirdEndDetailModifier.Father = rebarSet;
+            thirdEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            thirdEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            thirdEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[2], null));
+            thirdEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[3], null));
+            thirdEndDetailModifier.Insert();
+
+            var secondEndDetailModifier = new RebarEndDetailModifier();
+            secondEndDetailModifier.Father = rebarSet;
+            secondEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            secondEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[7], null));
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[6], null));
+            secondEndDetailModifier.Insert();
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
+        }
+        void ClosingCShapeRebarTop(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CCSR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CCSR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CCSRT";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = number == 0 ? 2 : 0;
+            Point p0 = ProfilePoints[number][0];
+            Point p1 = ProfilePoints[number][1];
+            Point p2 = ProfilePoints[number][2];
+            Point p3 = ProfilePoints[number][3];
+            Point p4 = ProfilePoints[number][4];
+            Point p5 = ProfilePoints[number][5];
+            Point p6 = ProfilePoints[number][6];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+            Point p9 = ProfilePoints[number][9];
+            p2 = new Point(p2.X, p6.Y, p2.Z);
+            p5 = new Point(p5.X, p6.Y, p5.Z);
+
+            List<Point> listPoint = new List<Point> { p0, p1, p2, p3, p4, p5, p6, p7, p8, p9 };
+
+            Point p0e = ProfilePoints[secondNumber][0];
+
+            Vector sectionDir = Utility.GetVectorFromTwoPoints(p0, p0e).GetNormal();
+            List<Point> offsetedPoints = new List<Point>();
+            for (int i = 0; i < listPoint.Count; i++)
+            {
+                Point correctedPoint = Utility.TranslePointByVectorAndDistance(listPoint[i], sectionDir, 2 * GetHookLength(rebarDiameter));
+                offsetedPoints.Add(correctedPoint);
+            }
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p3, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p4, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p5, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var thirdFace = new RebarLegFace();
+            thirdFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[2], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[3], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(p3, null));
+            rebarSet.LegFaces.Add(thirdFace);
+
+            var eighthFace = new RebarLegFace();
+            eighthFace.Contour.AddContourPoint(new ContourPoint(p5, null));
+            eighthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[5], null));
+            eighthFace.Contour.AddContourPoint(new ContourPoint(offsetedPoints[4], null));
+            eighthFace.Contour.AddContourPoint(new ContourPoint(p4, null));
+            rebarSet.LegFaces.Add(eighthFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 0;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(p2, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p3, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var thirdEndDetailModifier = new RebarEndDetailModifier();
+            thirdEndDetailModifier.Father = rebarSet;
+            thirdEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            thirdEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            thirdEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[2], null));
+            thirdEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[3], null));
+            thirdEndDetailModifier.Insert();
+
+            var secondEndDetailModifier = new RebarEndDetailModifier();
+            secondEndDetailModifier.Father = rebarSet;
+            secondEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            secondEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[5], null));
+            secondEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedPoints[4], null));
+            secondEndDetailModifier.Insert();
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
+        }
+        void CShapeRebarCommon()
+        {
+            string rebarSize = Program.ExcelDictionary["CSR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            double horizontalSpacing = Convert.ToDouble(Program.ExcelDictionary["CSR_HorizontalSpacing"]);
+            string verticalSpacing = Program.ExcelDictionary["CSR_VerticalSpacing"];
+            double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
+
+            List<double> min1YList = new List<double> { ProfilePoints[0][1].Y, ProfilePoints[1][1].Y, ProfilePoints[2][1].Y };
+            double min1Y = (from double y in min1YList
+                           orderby Math.Abs(y) ascending
+                           select y).First();
+
+            double height = Math.Abs(min1Y) + Math.Abs(ProfilePoints[0][0].Y);
+            double correctedHeight = height - startOffset;
+            int corTotalNumberOfRows = (int)Math.Ceiling(correctedHeight / Convert.ToDouble(verticalSpacing));
+            double offset = startOffset + 10 * Convert.ToInt32(rebarSize);
+            Vector dir = Utility.GetVectorFromTwoPoints(ProfilePoints[0][8], ProfilePoints[0][9]).GetNormal();
+
+            List<double> min8YList = new List<double> { ProfilePoints[0][8].Y, ProfilePoints[1][8].Y, ProfilePoints[2][8].Y };
+            double simpleHeight = (from double y in min8YList
+                                   orderby Math.Abs(y) ascending
+                                   select y).First();
+            simpleHeight += Math.Abs(ProfilePoints[0][0].Y);
+            for (int i = 0; i < corTotalNumberOfRows; i++)
+            {
+                double newoffset = offset + i * Convert.ToDouble(verticalSpacing);
+                if (newoffset <= simpleHeight)
+                {
+                    CShapeRebarSimple(rebarDiameter, newoffset, dir, horizontalSpacing);
+                }
+                else
+                {
+                    CShapeRebarComplex(rebarDiameter, newoffset, horizontalSpacing);
+                }
+            }
+        }
+        void CShapeRebarSimple(int rebarDiameter, double newoffset, Vector dir, double horizontalSpacing)
+        {
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CSRS";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarDiameter));
+            rebarSet.RebarProperties.Size = Convert.ToString(rebarDiameter);
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarDiameter));
+            rebarSet.LayerOrderNumber = 1;
+
+            Point startOuterPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y + newoffset, ProfilePoints[0][0].Z);
+            Point endOuterPoint = new Point(ProfilePoints[2][0].X, ProfilePoints[2][0].Y + newoffset, ProfilePoints[2][0].Z);
+            Point startInnerPoint = new Point(ProfilePoints[0][9].X, ProfilePoints[0][9].Y + newoffset, ProfilePoints[0][9].Z);
+            Point endInnerPoint = new Point(ProfilePoints[2][9].X, ProfilePoints[2][9].Y + newoffset, ProfilePoints[2][9].Z);
+
+            Point bottomStartOuterPoint = Utility.Translate(startOuterPoint, dir, 2 * GetHookLength(rebarDiameter));
+            Point bottomStartInnerPoint = Utility.Translate(startInnerPoint, dir, 2 * GetHookLength(rebarDiameter));
+            Point bottomEndtOuterPoint = Utility.Translate(endOuterPoint, dir, 2 * GetHookLength(rebarDiameter));
+            Point bottomEndInnerPoint = Utility.Translate(endInnerPoint, dir, 2 * GetHookLength(rebarDiameter));
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(startOuterPoint, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(endOuterPoint, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(endInnerPoint, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(startInnerPoint, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var innerFace = new RebarLegFace();
+            innerFace.Contour.AddContourPoint(new ContourPoint(startOuterPoint, null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(endOuterPoint, null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(bottomEndtOuterPoint, null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(bottomStartOuterPoint, null));
+            rebarSet.LegFaces.Add(innerFace);
+
+            var outerFace = new RebarLegFace();
+            outerFace.Contour.AddContourPoint(new ContourPoint(startInnerPoint, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(endInnerPoint, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(bottomEndInnerPoint, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(bottomStartInnerPoint, null));
+            rebarSet.LegFaces.Add(outerFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(horizontalSpacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startOuterPoint, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endOuterPoint, null));
+
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+            new Model().CommitChanges();
+
+            //Create RebarEndDetailModifier
+            var innerEndDetailModifier = new RebarEndDetailModifier();
+            innerEndDetailModifier.Father = rebarSet;
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomStartOuterPoint, null));
+            innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomEndtOuterPoint, null));
+            innerEndDetailModifier.Insert();
+
+            var outerEndDetailModifier = new RebarEndDetailModifier();
+            outerEndDetailModifier.Father = rebarSet;
+            outerEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            outerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomStartInnerPoint, null));
+            outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomEndInnerPoint, null));
+            outerEndDetailModifier.Insert();
+            new Model().CommitChanges();
+
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
+        }
+        void CShapeRebarComplex(int rebarDiameter, double newoffset, double horizontalSpacing)
+        {
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CSRC";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarDiameter));
+            rebarSet.RebarProperties.Size = Convert.ToString(rebarDiameter);
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarDiameter));
+            rebarSet.LayerOrderNumber = 1;
+
+
+            Point startOuterPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y + newoffset, ProfilePoints[0][0].Z);
+            Point midOuterPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y + newoffset, ProfilePoints[1][0].Z);
+            Point endOuterPoint = new Point(ProfilePoints[2][0].X, ProfilePoints[2][0].Y + newoffset, ProfilePoints[2][0].Z);
+            Point startInnerPoint = new Point(ProfilePoints[0][9].X, ProfilePoints[0][9].Y + newoffset, ProfilePoints[0][9].Z);
+            Point midInnerPoint = new Point(ProfilePoints[1][9].X, ProfilePoints[1][9].Y + newoffset, ProfilePoints[1][9].Z);
+            Point endInnerPoint = new Point(ProfilePoints[2][9].X, ProfilePoints[2][9].Y + newoffset, ProfilePoints[2][9].Z);
+
+
+            Line startLine = new Line(startOuterPoint, startInnerPoint);
+            Line endLine = new Line(endOuterPoint, endInnerPoint);
+            Line midLine = new Line(midOuterPoint, midInnerPoint);
+
+            Vector outerXdir = Utility.GetVectorFromTwoPoints(ProfilePoints[0][0], ProfilePoints[1][0]).GetNormal();
+            Vector outerYdir = Utility.GetVectorFromTwoPoints(ProfilePoints[0][0], ProfilePoints[0][1]).GetNormal();
+            Vector innerXdirFirst, innerYdirFirst, innerXdirSecond, innerYdirSecond;
+            Point innerPlaneOriginFirst,innerPlaneOriginSecond;
+            if (newoffset < Math.Abs(ProfilePoints[0][9].Y) + Math.Abs(ProfilePoints[0][7].Y))
+            {
+                innerXdirFirst = Utility.GetVectorFromTwoPoints(ProfilePoints[0][8], ProfilePoints[1][8]).GetNormal();
+                innerYdirFirst = Utility.GetVectorFromTwoPoints(ProfilePoints[0][8], ProfilePoints[0][7]).GetNormal();
+                innerXdirSecond = Utility.GetVectorFromTwoPoints(ProfilePoints[2][8], ProfilePoints[1][8]).GetNormal();
+                innerYdirSecond = Utility.GetVectorFromTwoPoints(ProfilePoints[2][8], ProfilePoints[2][7]).GetNormal();
+                innerPlaneOriginFirst = ProfilePoints[0][8];
+                innerPlaneOriginSecond = ProfilePoints[2][8];
+            }
+            else
+            {
+                innerXdirFirst = Utility.GetVectorFromTwoPoints(ProfilePoints[0][7], ProfilePoints[1][7]).GetNormal();
+                innerYdirFirst = Utility.GetVectorFromTwoPoints(ProfilePoints[0][7], ProfilePoints[0][6]).GetNormal();
+                innerXdirSecond = Utility.GetVectorFromTwoPoints(ProfilePoints[2][7], ProfilePoints[1][7]).GetNormal();
+                innerYdirSecond = Utility.GetVectorFromTwoPoints(ProfilePoints[2][7], ProfilePoints[2][6]).GetNormal();
+                innerPlaneOriginFirst = ProfilePoints[0][7];
+                innerPlaneOriginSecond = ProfilePoints[2][7];
+            }
+            GeometricPlane outerPlane = new GeometricPlane(ProfilePoints[0][0], outerXdir, outerYdir);
+            GeometricPlane innerPlaneFirst = new GeometricPlane(innerPlaneOriginFirst, innerXdirFirst, innerYdirFirst);
+            GeometricPlane innerPlaneSecond = new GeometricPlane(innerPlaneOriginSecond, innerXdirSecond, innerYdirSecond);
+
+            Point startOuterIntersection = Utility.GetExtendedIntersection(startLine, outerPlane, 10);
+            Point startInnerIntersection = Utility.GetExtendedIntersection(startLine, innerPlaneFirst, 10);
+            Point midInnerIntersection = Utility.GetExtendedIntersection(midLine, innerPlaneFirst, 10);
+            Point endOuterIntersection = Utility.GetExtendedIntersection(endLine, outerPlane, 10);
+            Point endInnerIntersection = Utility.GetExtendedIntersection(endLine, innerPlaneSecond, 10);
+
+            Point bottomStartOuterPoint = Utility.Translate(startOuterIntersection, outerYdir, -2 * GetHookLength(rebarDiameter));
+            Point bottomStartInnerPoint = Utility.Translate(startInnerIntersection, innerYdirFirst, 2 * GetHookLength(rebarDiameter));
+            Point bottomMidInnerPoint = Utility.Translate(midInnerIntersection, innerYdirFirst, 2 * GetHookLength(rebarDiameter));
+            Point bottomEndtOuterPoint = Utility.Translate(endOuterIntersection, outerYdir, -2 * GetHookLength(rebarDiameter));
+            Point bottomEndInnerPoint = Utility.Translate(endInnerIntersection, innerYdirFirst, 2 * GetHookLength(rebarDiameter));
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(startOuterPoint, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(endOuterPoint, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(endInnerIntersection, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(midInnerIntersection, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(startInnerIntersection, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var innerFace = new RebarLegFace();
+            innerFace.Contour.AddContourPoint(new ContourPoint(startOuterPoint, null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(endOuterPoint, null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(bottomEndtOuterPoint, null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(bottomStartOuterPoint, null));
+            rebarSet.LegFaces.Add(innerFace);
+
+            var outerFace = new RebarLegFace();
+            outerFace.Contour.AddContourPoint(new ContourPoint(startInnerIntersection, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(midInnerIntersection, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(endInnerIntersection, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(bottomEndInnerPoint, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(bottomMidInnerPoint, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(bottomStartInnerPoint, null));
+            rebarSet.LegFaces.Add(outerFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(horizontalSpacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startOuterPoint, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endOuterPoint, null));
+
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+            new Model().CommitChanges();
+
+            //Create RebarEndDetailModifier
+            var innerEndDetailModifier = new RebarEndDetailModifier();
+            innerEndDetailModifier.Father = rebarSet;
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomStartOuterPoint, null));
+            innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomEndtOuterPoint, null));
+            innerEndDetailModifier.Insert();
+
+            var outerEndDetailModifier = new RebarEndDetailModifier();
+            outerEndDetailModifier.Father = rebarSet;
+            outerEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            outerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomStartInnerPoint, null));
+            outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomMidInnerPoint, null));
+            outerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(bottomEndInnerPoint, null));
+            outerEndDetailModifier.Insert();
+            new Model().CommitChanges();
+
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
+        }
+        void ClosingLongitudianlRebarBottom(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CLR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CLR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = number == 0 ? 2 : 0;
+            Point p0 = ProfilePoints[number][0];
+            Point p1 = ProfilePoints[number][1];
+            Point p2 = ProfilePoints[number][2];
+            Point p3 = ProfilePoints[number][3];
+            Point p4 = ProfilePoints[number][4];
+            Point p5 = ProfilePoints[number][5];
+            Point p6 = ProfilePoints[number][6];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+            Point p9 = ProfilePoints[number][9];
+            Point p0e = ProfilePoints[secondNumber][0];
+
+            Point p1e = ProfilePoints[secondNumber][1];
+
+            Vector xDirTop = Utility.GetVectorFromTwoPoints(p1, p2);
+            Vector yDirTop = Utility.GetVectorFromTwoPoints(p1, p1e);
+            GeometricPlane geometricPlaneTop = new GeometricPlane(p1, xDirTop, yDirTop);
+
+            Line line = new Line(p9, p8);
+            Point correctedP2 = Utility.GetExtendedIntersection(line, geometricPlaneTop, 10);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p0, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p1, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP2, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p9, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            int c = number == 0 ? 1 : -1;
+
+            Point offsetP0 = new Point(p0.X + c * 40 * rebarDiameter, p0.Y, p0.Z);
+            Point offsetP9 = new Point(p9.X + c * 40 * rebarDiameter, p9.Y, p9.Z);
+
+            var offsetFace = new RebarLegFace();
+            offsetFace.Contour.AddContourPoint(new ContourPoint(p0, null));
+            offsetFace.Contour.AddContourPoint(new ContourPoint(offsetP0, null));
+            offsetFace.Contour.AddContourPoint(new ContourPoint(offsetP9, null));
+            offsetFace.Contour.AddContourPoint(new ContourPoint(p9, null));
+            rebarSet.LegFaces.Add(offsetFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(p0, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p9, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var firstEndDetailModifier = new RebarEndDetailModifier();
+            firstEndDetailModifier.Father = rebarSet;
+            firstEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            firstEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            firstEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetP0, null));
+            firstEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetP9, null));
+            firstEndDetailModifier.Insert();
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2 });
+        }
+        void ClosingLongitudianlRebarMid(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CLR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CLR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = 1;
+            Point p1 = ProfilePoints[number][1];
+            Point p2 = ProfilePoints[number][2];
+            Point p3 = ProfilePoints[number][3];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+            Point p9 = ProfilePoints[number][9];
+
+            Point p1e = ProfilePoints[secondNumber][1];
+            Point p2e = ProfilePoints[secondNumber][2];
+            Point p3e = ProfilePoints[secondNumber][3];
+            Point p9e = ProfilePoints[secondNumber][9];
+            Point p8e = ProfilePoints[secondNumber][8];
+
+            Vector xDirTop = Utility.GetVectorFromTwoPoints(p1, p2);
+            Vector yDirTop = Utility.GetVectorFromTwoPoints(p1, p1e);
+            GeometricPlane geometricPlaneTop = new GeometricPlane(p1, xDirTop, yDirTop);
+
+            Vector xDirBottom = Utility.GetVectorFromTwoPoints(p8, p7);
+            Vector yDirBottom = Utility.GetVectorFromTwoPoints(p8, p8e);
+            GeometricPlane geometricPlaneBottom = new GeometricPlane(p8, xDirBottom, yDirBottom);
+
+            Line startLine89 = new Line(p9, p8);
+            Line endLine89 = new Line(p9e, p8e);
+            Line startLine32 = new Line(p3, p2);
+            Line endLine32 = new Line(p3e, p2e);
+
+            Point correctedP8s = Utility.GetExtendedIntersection(startLine89, geometricPlaneTop, 2);
+            Point correctedP8e = Utility.GetExtendedIntersection(endLine89, geometricPlaneTop, 2);
+            Point correctedP2s = Utility.GetExtendedIntersection(startLine32, geometricPlaneBottom, 4);
+            Point correctedP2e = Utility.GetExtendedIntersection(endLine32, geometricPlaneBottom, 4);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p8, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP8s, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP2s, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p8, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p8e, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(correctedP2e, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(correctedP2s, null));
+            rebarSet.LegFaces.Add(bottomFace);
+
+            var topFace = new RebarLegFace();
+            topFace.Contour.AddContourPoint(new ContourPoint(correctedP8s, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(p2, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(p2e, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(correctedP8e, null));
+            rebarSet.LegFaces.Add(topFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 0;
+            guideline.Spacing.EndOffset = 0;
+
+            Point startGL = new Point(p8.X, p2.Y, p8.Z);
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p2, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var topEndDetailModifier = new RebarEndDetailModifier();
+            topEndDetailModifier.Father = rebarSet;
+            topEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            topEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            topEndDetailModifier.Curve.AddContourPoint(new ContourPoint(correctedP8e, null));
+            topEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p2e, null));
+            topEndDetailModifier.Insert();
+
+            var bottomEndDetailModifier = new RebarEndDetailModifier();
+            bottomEndDetailModifier.Father = rebarSet;
+            bottomEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            bottomEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            bottomEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p8e, null));
+            bottomEndDetailModifier.Curve.AddContourPoint(new ContourPoint(correctedP2e, null));
+            bottomEndDetailModifier.Insert();
+
+            rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
+            rebarSet.SetUserProperty("__MIN_BAR_LENGTH", 30 * rebarDiameter);
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
+        }
+        void ClosingLongitudianlRebarTop(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CLR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CLR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = 1;
+            Point p1 = ProfilePoints[number][1];
+            Point p2 = ProfilePoints[number][2];
+            Point p3 = ProfilePoints[number][3];
+            Point p4 = ProfilePoints[number][4];
+            Point p5 = ProfilePoints[number][5];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+            Point p9 = ProfilePoints[number][9];
+
+            Point p2e = ProfilePoints[secondNumber][2];
+            Point p3e = ProfilePoints[secondNumber][3];
+            Point p4e = ProfilePoints[secondNumber][4];
+            Point p5e = ProfilePoints[secondNumber][5];
+            Point p7e = ProfilePoints[secondNumber][7];
+            Point p8e = ProfilePoints[secondNumber][8];
+
+            Vector xDirBottom = Utility.GetVectorFromTwoPoints(p8, p7);
+            Vector yDirBottom = Utility.GetVectorFromTwoPoints(p8, p8e);
+            GeometricPlane geometricPlaneBottom = new GeometricPlane(p8, xDirBottom, yDirBottom);
+
+            Line startLine45 = new Line(p4, p5);
+            Line endLine45 = new Line(p4e, p5e);
+            Line startLine32 = new Line(p3, p2);
+            Line endLine32 = new Line(p3e, p2e);
+
+            Point correctedP5s = Utility.GetExtendedIntersection(startLine45, geometricPlaneBottom, 10);
+            Point correctedP5e = Utility.GetExtendedIntersection(endLine45, geometricPlaneBottom, 10);
+            Point correctedP2s = Utility.GetExtendedIntersection(startLine32, geometricPlaneBottom, 10);
+            Point correctedP2e = Utility.GetExtendedIntersection(endLine32, geometricPlaneBottom, 10);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p3, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p4, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP5s, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP2s, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p3, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p4, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p4e, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p3e, null));
+            rebarSet.LegFaces.Add(bottomFace);
+
+            var topFace = new RebarLegFace();
+            topFace.Contour.AddContourPoint(new ContourPoint(correctedP2s, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(correctedP5s, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(correctedP5e, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(correctedP2e, null));
+            rebarSet.LegFaces.Add(topFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 100;
+
+            Point startGL = new Point(p3.X, p2.Y, p3.Z);
+            Point endGL = new Point(p4.X, p2.Y, p4.Z);
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endGL, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var topEndDetailModifier = new RebarEndDetailModifier();
+            topEndDetailModifier.Father = rebarSet;
+            topEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            topEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            topEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p3e, null));
+            topEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p4e, null));
+            topEndDetailModifier.Insert();
+
+            var bottomEndDetailModifier = new RebarEndDetailModifier();
+            bottomEndDetailModifier.Father = rebarSet;
+            bottomEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            bottomEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            bottomEndDetailModifier.Curve.AddContourPoint(new ContourPoint(correctedP2e, null));
+            bottomEndDetailModifier.Curve.AddContourPoint(new ContourPoint(correctedP5e, null));
+            bottomEndDetailModifier.Insert();
+
+
+            rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
+            rebarSet.SetUserProperty("__MIN_BAR_LENGTH", 30 * rebarDiameter);
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
+        }
+        void ClosingLongitudianlRebarTop2(int number)
+        {
+            string rebarSize = Program.ExcelDictionary["CLR_Diameter"];
+            int rebarDiameter = Convert.ToInt32(rebarSize);
+            string spacing = Program.ExcelDictionary["CLR_Spacing"];
+
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "ABT_CLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 2;
+
+            int secondNumber = 1;
+            Point p2 = ProfilePoints[number][2];
+            Point p3 = ProfilePoints[number][3];
+            Point p4 = ProfilePoints[number][4];
+            Point p5 = ProfilePoints[number][5];
+            Point p6 = ProfilePoints[number][6];
+            Point p7 = ProfilePoints[number][7];
+            Point p8 = ProfilePoints[number][8];
+
+            Point p2e = ProfilePoints[secondNumber][2];
+            Point p3e = ProfilePoints[secondNumber][3];
+            Point p4e = ProfilePoints[secondNumber][4];
+            Point p5e = ProfilePoints[secondNumber][5];
+            Point p6e = ProfilePoints[secondNumber][6];
+            Point p7e = ProfilePoints[secondNumber][7];
+            Point p8e = ProfilePoints[secondNumber][8];
+
+            Vector xDirBottom = Utility.GetVectorFromTwoPoints(p8, p7);
+            Vector yDirBottom = Utility.GetVectorFromTwoPoints(p8, p8e);
+            GeometricPlane geometricPlaneBottom = new GeometricPlane(p8, xDirBottom, yDirBottom);
+
+            Line startLine45 = new Line(p4, p5);
+            Line endLine45 = new Line(p4e, p5e);
+            Line startLine32 = new Line(p3, p2);
+            Line endLine32 = new Line(p3e, p2e);
+
+            Point correctedP5s = Utility.GetExtendedIntersection(startLine45, geometricPlaneBottom, 10);
+            Point correctedP5e = Utility.GetExtendedIntersection(endLine45, geometricPlaneBottom, 10);
+            Point correctedP2s = Utility.GetExtendedIntersection(startLine32, geometricPlaneBottom, 10);
+            Point correctedP2e = Utility.GetExtendedIntersection(endLine32, geometricPlaneBottom, 10);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(p5, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP5s, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(p6, null));
+            rebarSet.LegFaces.Add(mainFace);
+
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(correctedP5s, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p7, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(p7e, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(correctedP5e, null));
+            rebarSet.LegFaces.Add(bottomFace);
+
+            var topFace = new RebarLegFace();
+            topFace.Contour.AddContourPoint(new ContourPoint(p5, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(p6, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(p6e, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(p5e, null));
+            rebarSet.LegFaces.Add(topFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 0;
+            guideline.Spacing.EndOffset = 100;
+
+            Point startGL = new Point(p5.X, p6.Y, p5.Z);
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(p6, null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var topEndDetailModifier = new RebarEndDetailModifier();
+            topEndDetailModifier.Father = rebarSet;
+            topEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            topEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            topEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p5e, null));
+            topEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p6e, null));
+            topEndDetailModifier.Insert();
+
+            var bottomEndDetailModifier = new RebarEndDetailModifier();
+            bottomEndDetailModifier.Father = rebarSet;
+            bottomEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
+            bottomEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            bottomEndDetailModifier.Curve.AddContourPoint(new ContourPoint(correctedP5e, null));
+            bottomEndDetailModifier.Curve.AddContourPoint(new ContourPoint(p7e, null));
+            bottomEndDetailModifier.Insert();
+            rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
+            rebarSet.SetUserProperty("__MIN_BAR_LENGTH", 30 * rebarDiameter);
+
+            new Model().CommitChanges();
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
         }
         #endregion
         #region Fields
