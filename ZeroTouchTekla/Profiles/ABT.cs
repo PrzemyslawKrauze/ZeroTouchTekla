@@ -33,7 +33,7 @@ namespace ZeroTouchTekla.Profiles
         {
             GetProfilePointsAndParameters(part);
         }
-        new public static void GetProfilePointsAndParameters(Beam beam)
+        public void GetProfilePointsAndParameters(Beam beam)
         {
             string[] profileValues = GetProfileValues(beam);
             //ABT Width*Height*FrontHeight*ShelfHeight*ShelfWidth*BackwallWidth*CantileverWidth*BackwallTopHeight*CantileverHeight*BackwallBottomHeight*SkewHeight

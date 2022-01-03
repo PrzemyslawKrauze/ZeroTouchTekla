@@ -65,7 +65,7 @@ namespace ZeroTouchTekla
 
         private void OnFootingRebarClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.FTG);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.FTG);
         }
 
         private void OnCopySpacingClick(object sender, EventArgs e)
@@ -80,7 +80,7 @@ namespace ZeroTouchTekla
 
         private void OnRTWButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.RTW);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.RTW);
         }
 
         private void OnTestButtonClick(object sender, EventArgs e)
@@ -91,27 +91,32 @@ namespace ZeroTouchTekla
 
         private void OnCollumnButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.CLMN);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.CLMN);
         }
 
         private void OnDoubleRTWButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.DRTW);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.DRTW);
         }
 
         private void OnRetainingWallStepButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.RTWS);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.RTWS);
         }
 
         private void OnAbutmentButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.ABT);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.ABT);
         }
 
         private void OnDoubledAbutmentClick(object sender, EventArgs e)
         {
-            RebarCreator.Create(RebarCreator.ProfileType.DABT);
+            RebarCreator.CreateForPart(RebarCreator.ProfileType.DABT);
+        }
+
+        private void OnWingButtonClick(object sender, EventArgs e)
+        {
+            RebarCreator.CreateForComponent(RebarCreator.ProfileType.WING);
         }
     }
 }

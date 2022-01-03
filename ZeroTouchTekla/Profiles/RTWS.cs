@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Tekla.Structures.Geometry3d;
 using Tekla.Structures.Model;
+using System.Reflection;
 
 
 namespace ZeroTouchTekla.Profiles
@@ -15,61 +16,61 @@ namespace ZeroTouchTekla.Profiles
         }
         #endregion
         #region PublicMethods
-        new public static void GetProfilePointsAndParameters(Beam beam)
+        new public void GetProfilePointsAndParameters(Beam beam)
         {
             string[] profileValues = GetProfileValues(beam);
             //RTWS Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2
-            Height = Convert.ToDouble(profileValues[0]);
-            BottomHeight = Convert.ToDouble(profileValues[1]);
-            SkewHeight = Convert.ToDouble(profileValues[2]);
-            BottomWidth = Convert.ToDouble(profileValues[3]);
-            TopWidth = Convert.ToDouble(profileValues[4]);
-            CorniceWidth = Convert.ToDouble(profileValues[5]);
-            CorniceHeight = Convert.ToDouble(profileValues[6]);
-            Length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
-            Height2 = 0;
+            _height = Convert.ToDouble(profileValues[0]);
+            _bottomHeight = Convert.ToDouble(profileValues[1]);
+            _skewHeight = Convert.ToDouble(profileValues[2]);
+            _bottomWidth = Convert.ToDouble(profileValues[3]);
+            _topWidth = Convert.ToDouble(profileValues[4]);
+            _corniceWidth = Convert.ToDouble(profileValues[5]);
+            _corniceHeight = Convert.ToDouble(profileValues[6]);
+            _length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
+            _height2 = 0;
             if (profileValues.Length > 7)
             {
-                Height2 = Convert.ToDouble(profileValues[7]);
+                _height2 = Convert.ToDouble(profileValues[7]);
             }
 
-            MaxHeight = Height>Height2 ?Height: Height2;
-            MinHeght = Height > Height2 ? Height2 : Height;
+            _maxHeight = _height>_height2 ?_height: _height2;
+            _minHeight = _height > _height2 ? _height2 : _height;
 
-            double fullWidth = BottomWidth + CorniceWidth;
-            double topHeight = Height - BottomHeight - SkewHeight;
+            double fullWidth = _bottomWidth + _corniceWidth;
+            double topHeight = _height - _bottomHeight - _skewHeight;
 
-            Point p0 = new Point(0, -Height / 2.0, fullWidth / 2.0 - CorniceWidth);
-            Point p1 = new Point(0, Height / 2.0 - CorniceHeight, p0.Z);
-            Point p2 = new Point(0, p1.Y, p1.Z + CorniceWidth);
-            Point p3 = new Point(0, p2.Y + CorniceHeight, p2.Z);
-            Point p4 = new Point(0, p3.Y, p3.Z - TopWidth);
+            Point p0 = new Point(0, -_height / 2.0, fullWidth / 2.0 - _corniceWidth);
+            Point p1 = new Point(0, _height / 2.0 - _corniceHeight, p0.Z);
+            Point p2 = new Point(0, p1.Y, p1.Z + _corniceWidth);
+            Point p3 = new Point(0, p2.Y + _corniceHeight, p2.Z);
+            Point p4 = new Point(0, p3.Y, p3.Z - _topWidth);
             Point p5 = new Point(0, p4.Y - topHeight, p4.Z);
-            Point p7 = new Point(0, -Height / 2.0, -fullWidth / 2.0);
-            Point p6 = new Point(0, -Height / 2.0 + BottomHeight, -fullWidth / 2.0);
+            Point p7 = new Point(0, -_height / 2.0, -fullWidth / 2.0);
+            Point p6 = new Point(0, -_height / 2.0 + _bottomHeight, -fullWidth / 2.0);
 
             List<Point> firstProfile = new List<Point> { p0, p1, p2, p3, p4, p5, p6, p7 };
 
             List<Point> secondProfile = new List<Point>();
-            if (Height2 == 0)
+            if (_height2 == 0)
             {
                 foreach (Point p in firstProfile)
                 {
                     Point secondPoint = new Point(p.X, p.Y, p.Z);
-                    secondPoint.Translate(Length, 0, 0);
+                    secondPoint.Translate(_length, 0, 0);
                     secondProfile.Add(secondPoint);
                 }
             }
             else
             {
-                Point s0 = new Point(Length, -Height / 2.0, fullWidth / 2.0 - CorniceWidth);
-                Point s1 = new Point(Length, s0.Y + Height2 - CorniceHeight, s0.Z);
-                Point s2 = new Point(Length, s1.Y, s1.Z + CorniceWidth);
-                Point s3 = new Point(Length, s2.Y + CorniceHeight, s2.Z);
-                Point s4 = new Point(Length, s3.Y, p3.Z - TopWidth);
-                Point s5 = new Point(Length, p4.Y - topHeight, p4.Z);
-                Point s7 = new Point(Length, -Height / 2.0, -fullWidth / 2.0);
-                Point s6 = new Point(Length, -Height / 2.0 + BottomHeight, -fullWidth / 2.0);
+                Point s0 = new Point(_length, -_height / 2.0, fullWidth / 2.0 - _corniceWidth);
+                Point s1 = new Point(_length, s0.Y + _height2 - _corniceHeight, s0.Z);
+                Point s2 = new Point(_length, s1.Y, s1.Z + _corniceWidth);
+                Point s3 = new Point(_length, s2.Y + _corniceHeight, s2.Z);
+                Point s4 = new Point(_length, s3.Y, p3.Z - _topWidth);
+                Point s5 = new Point(_length, p4.Y - topHeight, p4.Z);
+                Point s7 = new Point(_length, -_height / 2.0, -fullWidth / 2.0);
+                Point s6 = new Point(_length, -_height / 2.0 + _bottomHeight, -fullWidth / 2.0);
                 secondProfile = new List<Point> { s0, s1, s2, s3, s4, s5, s6, s7 };
             }
 
@@ -163,8 +164,8 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
-            Point startp3bis = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + CorniceHeight, ProfilePoints[0][1].Z);
-            Point endp3bis = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + CorniceHeight, ProfilePoints[1][1].Z);
+            Point startp3bis = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + _corniceHeight, ProfilePoints[0][1].Z);
+            Point endp3bis = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + _corniceHeight, ProfilePoints[1][1].Z);
 
             var mainFace = new RebarLegFace();
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
@@ -259,7 +260,7 @@ namespace ZeroTouchTekla.Profiles
                 new Model().CommitChanges();
             }
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3 });
         }
         void BottomOuterVerticalRebar()
@@ -323,7 +324,7 @@ namespace ZeroTouchTekla.Profiles
             innerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3 });
         }
         void TopOuterVerticalRebar()
@@ -373,7 +374,7 @@ namespace ZeroTouchTekla.Profiles
             innerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1 });
         }
         void SkewVerticalRebar()
@@ -446,7 +447,7 @@ namespace ZeroTouchTekla.Profiles
 
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
         }
         void InnerLongitudinalRebar()
@@ -503,7 +504,7 @@ namespace ZeroTouchTekla.Profiles
             }
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void TopOuterLongitudinalRebar()
@@ -543,7 +544,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void SkewLongitudinalRebar()
@@ -583,7 +584,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void BottomOuterLongitudinalRebar()
@@ -624,7 +625,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void CornicePerpendicularRebar()
@@ -695,7 +696,7 @@ namespace ZeroTouchTekla.Profiles
             bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][5], null));
             bottomLengthModifier.Insert();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
         }
         void CorniceLongitudinalRebar()
@@ -731,7 +732,7 @@ namespace ZeroTouchTekla.Profiles
             guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
             rebarSet.Guidelines.Add(guideline);
 
-            if (Height2 != 0)
+            if (_height2 != 0)
             {
                 var secondaryGuideLine = new RebarGuideline();
                 secondaryGuideLine.Spacing.InheritFromPrimary = true;
@@ -745,7 +746,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void BottomClosingCShapeRebar(bool isStart)
@@ -769,22 +770,22 @@ namespace ZeroTouchTekla.Profiles
                 leftBottom = ProfilePoints[0][0];
                 rightBottom = ProfilePoints[0][7];
                 rightTop = ProfilePoints[0][6];
-                leftTop = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y + BottomHeight, ProfilePoints[0][0].Z);
+                leftTop = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y + _bottomHeight, ProfilePoints[0][0].Z);
                 endLeftBottom = ProfilePoints[1][0];
                 endRightBottom = ProfilePoints[1][7];
                 endRightTop = ProfilePoints[1][6];
-                endLeftTop = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y + BottomHeight, ProfilePoints[1][0].Z);
+                endLeftTop = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y + _bottomHeight, ProfilePoints[1][0].Z);
             }
             else
             {
                 leftBottom = ProfilePoints[1][0];
                 rightBottom = ProfilePoints[1][7];
                 rightTop = ProfilePoints[1][6];
-                leftTop = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y + BottomHeight, ProfilePoints[1][0].Z);
+                leftTop = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y + _bottomHeight, ProfilePoints[1][0].Z);
                 endLeftBottom = ProfilePoints[0][0];
                 endRightBottom = ProfilePoints[0][7];
                 endRightTop = ProfilePoints[0][6];
-                endLeftTop = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y + BottomHeight, ProfilePoints[0][0].Z);
+                endLeftTop = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y + _bottomHeight, ProfilePoints[0][0].Z);
             }
 
             var mainFace = new RebarLegFace();
@@ -846,7 +847,7 @@ namespace ZeroTouchTekla.Profiles
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
         }
         void SkewClosingCShapeRebar(bool isStart)
@@ -947,7 +948,7 @@ namespace ZeroTouchTekla.Profiles
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
         }
         void TopClosingCShapeRebar(bool isStart)
@@ -1048,7 +1049,7 @@ namespace ZeroTouchTekla.Profiles
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
         }
         void ClosingLongitudinalRebar(bool isStart)
@@ -1110,7 +1111,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void BottomCShapeRebar()
@@ -1120,7 +1121,7 @@ namespace ZeroTouchTekla.Profiles
             string verticalSpacing = Program.ExcelDictionary["CSR_VerticalSpacing"];
             double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
 
-            double height = BottomHeight;
+            double height = _bottomHeight;
             double correctedHeight = height - startOffset - 10 * Convert.ToInt32(rebarSize);
             int correctedNumberOfRows = (int)Math.Floor(correctedHeight / Convert.ToDouble(verticalSpacing)) + 1;
             double offset = startOffset + 10 * Convert.ToInt32(rebarSize);
@@ -1199,7 +1200,7 @@ namespace ZeroTouchTekla.Profiles
                 outerEndDetailModifier.Insert();
                 new Model().CommitChanges();
 
-                rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+                PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
                 RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
             }
         }
@@ -1209,7 +1210,7 @@ namespace ZeroTouchTekla.Profiles
             string horizontalSpacing = Program.ExcelDictionary["CSR_HorizontalSpacing"];
             string verticalSpacing = Program.ExcelDictionary["CSR_VerticalSpacing"];
 
-            double height = MinHeght - BottomHeight - SkewHeight;
+            double height = _minHeight - _bottomHeight - _skewHeight;
             double correctedHeight = height - 10 * Convert.ToInt32(rebarSize);
             int correctedNumberOfRows = (int)Math.Floor(correctedHeight / Convert.ToDouble(verticalSpacing)) + 1;
             double offset = 10 * Convert.ToInt32(rebarSize);
@@ -1288,12 +1289,23 @@ namespace ZeroTouchTekla.Profiles
                 outerEndDetailModifier.Insert();
                 new Model().CommitChanges();
 
-                rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+                PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
                 RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
             }
         }
         #endregion
         #region Properties
+        public double TopWidth { get { return _topWidth; } }
+        public double CorniceWidth { get { return _corniceWidth; } }
+        public double BottomWidth { get { return _bottomWidth; } }
+        public double BottomHeight { get { return _bottomHeight; } }
+        public double SkewHeight { get { return _skewHeight; } }
+        public double CorniceHeight { get { return _corniceHeight; } }
+        public double Height { get { return _height; } }
+        public double Height2 { get { return _height2; } }
+        public double Length { get { return _length; } }
+        public double MaxHeight { get { return _maxHeight; } }
+        public double MinHeight { get { return _minHeight; } }
         #endregion
         #region Fields
         enum RebarType
@@ -1308,17 +1320,17 @@ namespace ZeroTouchTekla.Profiles
             CCSR,
             CLR
         }
-        static double TopWidth;
-        static double CorniceWidth;
-        static double BottomWidth;
-        static double BottomHeight;
-        static double SkewHeight;
-        static double CorniceHeight;
-        static double Height;
-        static double Height2;
-        static double Length;
-        static double MaxHeight;
-        static double MinHeght;
+        static double _topWidth;
+        static double _corniceWidth;
+        static double _bottomWidth;
+        static double _bottomHeight;
+        static double _skewHeight;
+        static double _corniceHeight;
+        static double _height;
+        static double _height2;
+        static double _length;
+        static double _maxHeight;
+        static double _minHeight;
         #endregion
     }
 }

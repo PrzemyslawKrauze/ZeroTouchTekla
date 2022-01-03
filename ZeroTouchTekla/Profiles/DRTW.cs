@@ -17,7 +17,7 @@ namespace ZeroTouchTekla.Profiles
         }
         #endregion
         #region PublicMethods
-        public static void GetProfilePointsAndParameters(Beam beam1, Beam beam2)
+        public void GetProfilePointsAndParameters(Beam beam1, Beam beam2)
         {
             string[] profileValues1 = GetProfileValues(beam1);
             string[] profileValues2 = GetProfileValues(beam2);

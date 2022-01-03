@@ -57,7 +57,7 @@ namespace ZeroTouchTekla.Profiles
         }
         #endregion
         #region PrivateMethods  
-        public static void GetProfilePointsAndParameters(Beam beam, Beam secondBeam)
+        public void GetProfilePointsAndParameters(Beam beam, Beam secondBeam)
         {
             string[] profileValues = GetProfileValues(beam);
             string[] secondProfileValues = GetProfileValues(secondBeam);
@@ -1355,7 +1355,7 @@ namespace ZeroTouchTekla.Profiles
 
             new Model().CommitChanges();
             rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2,2 });
+            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2 });
         }
         /// <summary>
         /// Create closing C shape rebar
@@ -1680,8 +1680,8 @@ namespace ZeroTouchTekla.Profiles
 
             List<double> min1YList = new List<double> { ProfilePoints[0][1].Y, ProfilePoints[1][1].Y, ProfilePoints[2][1].Y };
             double min1Y = (from double y in min1YList
-                           orderby Math.Abs(y) ascending
-                           select y).First();
+                            orderby Math.Abs(y) ascending
+                            select y).First();
 
             double height = Math.Abs(min1Y) + Math.Abs(ProfilePoints[0][0].Y);
             double correctedHeight = height - startOffset;
@@ -1813,7 +1813,7 @@ namespace ZeroTouchTekla.Profiles
             Vector outerXdir = Utility.GetVectorFromTwoPoints(ProfilePoints[0][0], ProfilePoints[1][0]).GetNormal();
             Vector outerYdir = Utility.GetVectorFromTwoPoints(ProfilePoints[0][0], ProfilePoints[0][1]).GetNormal();
             Vector innerXdirFirst, innerYdirFirst, innerXdirSecond, innerYdirSecond;
-            Point innerPlaneOriginFirst,innerPlaneOriginSecond;
+            Point innerPlaneOriginFirst, innerPlaneOriginSecond;
             if (newoffset < Math.Abs(ProfilePoints[0][9].Y) + Math.Abs(ProfilePoints[0][7].Y))
             {
                 innerXdirFirst = Utility.GetVectorFromTwoPoints(ProfilePoints[0][8], ProfilePoints[1][8]).GetNormal();

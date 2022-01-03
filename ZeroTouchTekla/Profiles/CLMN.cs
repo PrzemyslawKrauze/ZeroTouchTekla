@@ -20,7 +20,7 @@ namespace ZeroTouchTekla
         }
         #endregion
         #region PublicMethods
-        new public static void GetProfilePointsAndParameters(Beam beam)
+        public void GetProfilePointsAndParameters(Beam beam)
         {
             string[] profileValues = GetProfileValues(beam);
             //FTG Width*FirstHeight*SecondHeight*AsymWidth

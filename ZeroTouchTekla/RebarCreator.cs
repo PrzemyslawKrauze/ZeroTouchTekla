@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.IO;
 using Tekla.Structures.Filtering;
 using Tekla.Structures.Filtering.Categories;
@@ -19,63 +20,15 @@ namespace ZeroTouchTekla
             ModelInfo info = model.GetInfo();
 
             // Creates the filter expressions
-            PartFilterExpressions.Class partClass = new PartFilterExpressions.Class();
-            NumericConstantFilterExpression Beam1 = new NumericConstantFilterExpression(10);
-            var binaryFilterExpression = new BinaryFilterExpression(partClass, NumericOperatorType.IS_EQUAL, Beam1);
-
-            BinaryFilterExpressionCollection binaryFilterCollection = new BinaryFilterExpressionCollection();
-            binaryFilterCollection.Add(new BinaryFilterExpressionItem(binaryFilterExpression));
-
-            string attributesPath = Path.Combine(info.ModelPath, "attributes");
-            string filterName = Path.Combine(attributesPath, "ZTBFilter");
-            Filter filter = new Filter(binaryFilterCollection);
-
-            filter.CreateFile(FilterExpressionFileType.OBJECT_GROUP_VIEW, filterName);
-            var views = Tekla.Structures.Model.UI.ViewHandler.GetVisibleViews();
-            views.MoveNext();
-            var view = views.Current;
-            //Tekla.Structures.Model.UI.ViewCamera Camera = new Tekla.Structures.Model.UI.ViewCamera();
-            // Camera.View = view;
-            view.ViewFilter = "ZTBFilter";
-            //Camera.Select();
-            view.Modify();
-            // Camera.Modify();
-
-        }
-        public static void Test2()
-        {
-            Model model = new Model();
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-            try
-            {
-                Beam part = picker.PickObject(pickObjectEnum) as Beam;
-                FatherID = part.Identifier.ID;
-                if (part != null)
-                {
-                    //Store current work plane
-                    TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
-                    //Get beam local plane
-                    TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
-                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_OBJECT;
+            ModelObject modelObject = picker.PickObject(pickObjectEnum);
+            BaseComponent baseComponent = modelObject.GetFatherComponent();
+            System.Collections.Hashtable hashtable = new System.Collections.Hashtable();
+            modelObject.GetAllUserProperties(ref hashtable);        
 
-                    RTW rtw = new RTW(part);
-
-                    //Restore user work plane
-                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
-                    model.CommitChanges();
-                }
-
-                ChangeLayer(model);
-                ChangeLayer(model);
-                LayerDictionary = new Dictionary<int, int[]>();
-            }
-            catch (System.ApplicationException)
-            {
-                Operation.DisplayPrompt("User interrupted!");
-            }
         }
-        public static void Create(ProfileType profileType)
+        public static void CreateForPart(ProfileType profileType)
         {
             Model model = new Model();
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
@@ -131,6 +84,48 @@ namespace ZeroTouchTekla
                             DABT dabt = new DABT(part, secondPart);
                             dabt.Create();
                             break;
+                    }
+
+                    //Restore user work plane
+                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+                    model.CommitChanges();
+                }
+
+                ChangeLayer(model);
+                ChangeLayer(model);
+                LayerDictionary = new Dictionary<int, int[]>();
+            }
+            catch (System.ApplicationException)
+            {
+                Operation.DisplayPrompt("User interrupted!");
+            }
+        }
+        public static void CreateForComponent(ProfileType profileType)
+        {
+            Model model = new Model();
+            ModelInfo info = model.GetInfo();
+            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
+            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_OBJECT;
+            ModelObject modelObject = picker.PickObject(pickObjectEnum);          
+            try
+            {
+                Beam part = modelObject as Beam;
+                FatherID = part.Identifier.ID;
+                if (part != null)
+                {
+                    //Store current work plane
+                    TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+                    //Get beam local plane
+                    TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
+                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+
+                    switch (profileType)
+                    {
+                        case ProfileType.WING:
+                            WING wing = new WING(part);
+                            wing.Create();
+                            break;                       
+                    
                     }
 
                     //Restore user work plane
@@ -282,7 +277,8 @@ namespace ZeroTouchTekla
             RTWS,
             CLMN,
             ABT,
-            DABT
+            DABT,
+            WING
         }
         public static int FatherID;
         static ProfileType GetProfileType(string profileString)
@@ -307,6 +303,7 @@ namespace ZeroTouchTekla
             }
             return ProfileType.None;
         }
-        public static string FatherIDName = "USER_FIELD_1";
+        public static string FatherIDName = "MK_FatherIDName";
+        public static string MethodName = "MK_MethodName";
     }
 }

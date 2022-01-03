@@ -14,20 +14,17 @@ namespace ZeroTouchTekla
     {
         public Element(Beam part)
         {
-            GetProfilePointsAndParameters(part);
             SetRebarCreatorProperties(part);
         }
         public void Create()
         { }
         public void CreateSingle(string barName)
-        { }
-        protected static void GetProfilePointsAndParameters(Beam beam)
+        { }       
+        public List<List<Point>> GetProfilePoints()
         {
-            ProfilePoints = new List<List<Point>>();
-            ProfileParameters = new Dictionary<string, double>();
-            ElementFace = new ElementFace(ProfilePoints);
+            return ProfilePoints;
         }
-        protected static void SetRebarCreatorProperties(Beam beam)
+        protected void SetRebarCreatorProperties(Beam beam)
         {
             beam.GetUserProperty("__CovThickSides", ref SideCover);
             beam.GetUserProperty("__CovThickBottom", ref BottomCover);
@@ -78,16 +75,18 @@ namespace ZeroTouchTekla
                     return 8;
             }
         }
-
-        protected static List<List<Point>> ProfilePoints = new List<List<Point>>();
-        protected static Dictionary<string, double> ProfileParameters = new Dictionary<string, double>();
-        public static double SideCover = 0;
-        public static double BottomCover = 0;
-        public static double TopCover = 0;
-        public static ElementFace ElementFace;
-        enum RebarType
+        protected void PostRebarCreationMethod(RebarSet rebarSet, System.Reflection.MethodBase methodBase)
         {
-        };
+            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.MethodName, methodBase.Name);
+        }
+
+        protected List<List<Point>> ProfilePoints = new List<List<Point>>();
+        protected  Dictionary<string, double> ProfileParameters = new Dictionary<string, double>();
+        public  double SideCover = 0;
+        public  double BottomCover = 0;
+        public  double TopCover = 0;
+        public  ElementFace ElementFace;        
     }
     public class ElementFace
     {
@@ -143,4 +142,5 @@ namespace ZeroTouchTekla
         List<RebarLegFace> rebarLegFaces;
 
     }
+    
 }

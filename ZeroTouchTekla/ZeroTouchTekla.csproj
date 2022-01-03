@@ -100,6 +100,7 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Profiles\FTG.cs" />
+    <Compile Include="Profiles\WING.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RebarCreator.cs" />
