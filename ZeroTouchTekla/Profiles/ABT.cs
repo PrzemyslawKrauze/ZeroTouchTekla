@@ -379,7 +379,7 @@ namespace ZeroTouchTekla.Profiles
             string spacing = Program.ExcelDictionary["CtVR_Spacing"];
 
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "ABT_IVR";
+            rebarSet.RebarProperties.Name = "ABT_CtVR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;

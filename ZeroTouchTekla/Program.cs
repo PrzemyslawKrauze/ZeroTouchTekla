@@ -17,7 +17,6 @@ namespace ZeroTouchTekla
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
-
         }
         public static string excelPath = "";
         public static string sheetName = "";

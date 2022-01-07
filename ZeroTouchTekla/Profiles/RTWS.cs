@@ -761,7 +761,6 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.Size = rebarSize;
             rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
-            rebarSet.SetUserProperty("User field 1", 0);
 
             Point leftBottom, rightBottom, rightTop, leftTop;
             Point endLeftBottom, endRightBottom, endRightTop, endLeftTop;

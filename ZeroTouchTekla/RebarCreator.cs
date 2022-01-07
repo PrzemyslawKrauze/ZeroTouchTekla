@@ -23,10 +23,7 @@ namespace ZeroTouchTekla
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_OBJECT;
             ModelObject modelObject = picker.PickObject(pickObjectEnum);
-            BaseComponent baseComponent = modelObject.GetFatherComponent();
-            System.Collections.Hashtable hashtable = new System.Collections.Hashtable();
-            modelObject.GetAllUserProperties(ref hashtable);        
-
+          
         }
         public static void CreateForPart(ProfileType profileType)
         {
@@ -303,7 +300,9 @@ namespace ZeroTouchTekla
             }
             return ProfileType.None;
         }
-        public static string FatherIDName = "MK_FatherIDName";
-        public static string MethodName = "MK_MethodName";
+        public static string FatherIDName = "ZTB_FatherIDName";
+        public static string MethodName = "ZTB_MethodName";
+        public static string MethodInput = "ZTB_MethodInput";
+        public static int MinLengthCoefficient = 20;
     }
 }
