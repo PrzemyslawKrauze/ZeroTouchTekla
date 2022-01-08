@@ -12,14 +12,15 @@ namespace ZeroTouchTekla.Profiles
         #region Constructor
         public RTWS(Beam part) : base(part)
         {
-            GetProfilePointsAndParameters(part);
+            SetFields(part);
+            SetProfilePoints();
         }
         #endregion
         #region PublicMethods
-        new public void GetProfilePointsAndParameters(Beam beam)
+        void SetFields(Beam beam)
         {
             string[] profileValues = GetProfileValues(beam);
-            //RTWS Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2
+            //RTWSV Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2
             _height = Convert.ToDouble(profileValues[0]);
             _bottomHeight = Convert.ToDouble(profileValues[1]);
             _skewHeight = Convert.ToDouble(profileValues[2]);
@@ -28,26 +29,31 @@ namespace ZeroTouchTekla.Profiles
             _corniceWidth = Convert.ToDouble(profileValues[5]);
             _corniceHeight = Convert.ToDouble(profileValues[6]);
             _length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
-            _height2 = 0;
             if (profileValues.Length > 7)
             {
                 _height2 = Convert.ToDouble(profileValues[7]);
             }
+            else
+            {
+                _height2 = _height;
+            }
 
-            _maxHeight = _height>_height2 ?_height: _height2;
+            _maxHeight = _height > _height2 ? _height : _height2;
             _minHeight = _height > _height2 ? _height2 : _height;
+        }
+        void SetProfilePoints()
+        {
+            double fullWidth = BottomWidth +CorniceWidth;
+            double topHeight = Height - BottomHeight - SkewHeight;
 
-            double fullWidth = _bottomWidth + _corniceWidth;
-            double topHeight = _height - _bottomHeight - _skewHeight;
-
-            Point p0 = new Point(0, -_height / 2.0, fullWidth / 2.0 - _corniceWidth);
-            Point p1 = new Point(0, _height / 2.0 - _corniceHeight, p0.Z);
-            Point p2 = new Point(0, p1.Y, p1.Z + _corniceWidth);
-            Point p3 = new Point(0, p2.Y + _corniceHeight, p2.Z);
-            Point p4 = new Point(0, p3.Y, p3.Z - _topWidth);
+            Point p0 = new Point(0, -_maxHeight / 2.0, fullWidth / 2.0 - CorniceWidth);
+            Point p1 = new Point(0, p0.Y+Height - CorniceHeight, p0.Z);
+            Point p2 = new Point(0, p1.Y, p1.Z + CorniceWidth);
+            Point p3 = new Point(0, p2.Y + CorniceHeight, p2.Z);
+            Point p4 = new Point(0, p3.Y, p3.Z - TopWidth);
             Point p5 = new Point(0, p4.Y - topHeight, p4.Z);
-            Point p7 = new Point(0, -_height / 2.0, -fullWidth / 2.0);
-            Point p6 = new Point(0, -_height / 2.0 + _bottomHeight, -fullWidth / 2.0);
+            Point p7 = new Point(0, -_maxHeight / 2.0, -fullWidth / 2.0);
+            Point p6 = new Point(0, -_maxHeight / 2.0 + BottomHeight, -fullWidth / 2.0);
 
             List<Point> firstProfile = new List<Point> { p0, p1, p2, p3, p4, p5, p6, p7 };
 
@@ -57,20 +63,20 @@ namespace ZeroTouchTekla.Profiles
                 foreach (Point p in firstProfile)
                 {
                     Point secondPoint = new Point(p.X, p.Y, p.Z);
-                    secondPoint.Translate(_length, 0, 0);
+                    secondPoint.Translate(Length, 0, 0);
                     secondProfile.Add(secondPoint);
                 }
             }
             else
             {
-                Point s0 = new Point(_length, -_height / 2.0, fullWidth / 2.0 - _corniceWidth);
-                Point s1 = new Point(_length, s0.Y + _height2 - _corniceHeight, s0.Z);
-                Point s2 = new Point(_length, s1.Y, s1.Z + _corniceWidth);
-                Point s3 = new Point(_length, s2.Y + _corniceHeight, s2.Z);
-                Point s4 = new Point(_length, s3.Y, p3.Z - _topWidth);
+                Point s0 = new Point(_length, -_maxHeight / 2.0, fullWidth / 2.0 - _corniceWidth);
+                Point s1 = new Point(_length, s0.Y + Height2 - CorniceHeight, s0.Z);
+                Point s2 = new Point(_length, s1.Y, s1.Z + CorniceWidth);
+                Point s3 = new Point(_length, s2.Y + CorniceHeight, s2.Z);
+                Point s4 = new Point(_length, s3.Y, p3.Z - TopWidth);
                 Point s5 = new Point(_length, p4.Y - topHeight, p4.Z);
-                Point s7 = new Point(_length, -_height / 2.0, -fullWidth / 2.0);
-                Point s6 = new Point(_length, -_height / 2.0 + _bottomHeight, -fullWidth / 2.0);
+                Point s7 = new Point(_length, -_maxHeight / 2.0, -fullWidth / 2.0);
+                Point s6 = new Point(_length, -_maxHeight / 2.0 + BottomHeight, -fullWidth / 2.0);
                 secondProfile = new List<Point> { s0, s1, s2, s3, s4, s5, s6, s7 };
             }
 
@@ -81,17 +87,17 @@ namespace ZeroTouchTekla.Profiles
         }
         new public void Create()
         {
-            InnerVerticalRebar();
+            OuterVerticalRebar();
 
-            BottomOuterVerticalRebar();
+            BottomInnerVerticalRebar();
 
-            TopOuterVerticalRebar();
+            TopInnerVerticalRebar();
 
             SkewVerticalRebar();
-            InnerLongitudinalRebar();
+            OuterLongitudinalRebar();
 
-            TopOuterLongitudinalRebar();
-            BottomOuterLongitudinalRebar();
+            TopInnerLongitudinalRebar();
+            BottomInnerLongitudinalRebar();
 
             SkewLongitudinalRebar();
             CornicePerpendicularRebar();
@@ -120,16 +126,16 @@ namespace ZeroTouchTekla.Profiles
             switch (rType)
             {
                 case RebarType.IVR:
-                    InnerVerticalRebar();
+                    OuterVerticalRebar();
                     break;
                 case RebarType.OVR:
-                    BottomOuterVerticalRebar();
+                    BottomInnerVerticalRebar();
                     break;
                 case RebarType.ILR:
-                    InnerLongitudinalRebar();
+                    OuterLongitudinalRebar();
                     break;
                 case RebarType.TOLR:
-                    TopOuterLongitudinalRebar();
+                    TopInnerLongitudinalRebar();
                     break;
                 case RebarType.CrPR:
                     CornicePerpendicularRebar();
@@ -149,15 +155,15 @@ namespace ZeroTouchTekla.Profiles
         }
         #endregion
         #region PrivateMethods
-        void InnerVerticalRebar()
+        void OuterVerticalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["IVR_Diameter"];
-            string spacing = Program.ExcelDictionary["IVR_Spacing"];
-            int addSplitter = Convert.ToInt32(Program.ExcelDictionary["IVR_AddSplitter"]);
-            string secondRebarSize = Program.ExcelDictionary["IVR_SecondDiameter"];
-            double spliterOffset = Convert.ToDouble(Program.ExcelDictionary["IVR_SplitterOffset"]) + Convert.ToDouble(rebarSize) * 20;
+            string rebarSize = Program.ExcelDictionary["OVR_Diameter"];
+            string spacing = Program.ExcelDictionary["OVR_Spacing"];
+            int addSplitter = Convert.ToInt32(Program.ExcelDictionary["OVR_AddSplitter"]);
+            string secondRebarSize = Program.ExcelDictionary["OVR_SecondDiameter"];
+            double spliterOffset = Convert.ToDouble(Program.ExcelDictionary["OVR_SplitterOffset"]) + Convert.ToDouble(rebarSize) * 20;
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_IVR";
+            rebarSet.RebarProperties.Name = "RTW_OVR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -263,16 +269,13 @@ namespace ZeroTouchTekla.Profiles
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3 });
         }
-        void BottomOuterVerticalRebar()
+        void BottomInnerVerticalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OVR_Diameter"];
-            string spacing = Program.ExcelDictionary["OVR_Spacing"];
-            int addSplitter = Convert.ToInt32(Program.ExcelDictionary["OVR_AddSplitter"]);
-            string secondRebarSize = Program.ExcelDictionary["OVR_SecondDiameter"];
-            double spliterOffset = Convert.ToDouble(Program.ExcelDictionary["OVR_SplitterOffset"]) + Convert.ToDouble(rebarSize) * 20;
+            string rebarSize = Program.ExcelDictionary["IVR_Diameter"];
+            string spacing = Program.ExcelDictionary["IVR_Spacing"];
 
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_OVR";
+            rebarSet.RebarProperties.Name = "RTW_IVR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -327,13 +330,13 @@ namespace ZeroTouchTekla.Profiles
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3 });
         }
-        void TopOuterVerticalRebar()
+        void TopInnerVerticalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OVR_SecondDiameter"];
-            string spacing = Program.ExcelDictionary["OVR_Spacing"];
+            string rebarSize = Program.ExcelDictionary["IVR_SecondDiameter"];
+            string spacing = Program.ExcelDictionary["IVR_Spacing"];
 
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_OVR";
+            rebarSet.RebarProperties.Name = "RTW_IVR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -450,15 +453,15 @@ namespace ZeroTouchTekla.Profiles
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1 });
         }
-        void InnerLongitudinalRebar()
+        void OuterLongitudinalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["ILR_SecondDiameter"];
-            string secondRebarSize = Program.ExcelDictionary["ILR_Diameter"];
-            string spacing = Program.ExcelDictionary["ILR_Spacing"];
-            double startOffset = Convert.ToDouble(Program.ExcelDictionary["ILR_StartOffset"]);
-            double firstLength = Convert.ToDouble(Program.ExcelDictionary["ILR_SecondDiameterLength"]);
+            string rebarSize = Program.ExcelDictionary["OLR_SecondDiameter"];
+            string secondRebarSize = Program.ExcelDictionary["OLR_Diameter"];
+            string spacing = Program.ExcelDictionary["OLR_Spacing"];
+            double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
+            double firstLength = Convert.ToDouble(Program.ExcelDictionary["OLR_SecondDiameterLength"]);
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_ILR";
+            rebarSet.RebarProperties.Name = "RTW_OLR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -507,12 +510,12 @@ namespace ZeroTouchTekla.Profiles
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
-        void TopOuterLongitudinalRebar()
+        void TopInnerLongitudinalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OLR_SecondDiameter"];
-            string spacing = Program.ExcelDictionary["OLR_Spacing"];
+            string rebarSize = Program.ExcelDictionary["ILR_SecondDiameter"];
+            string spacing = Program.ExcelDictionary["ILR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_OLR";
+            rebarSet.RebarProperties.Name = "RTW_ILR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -549,10 +552,10 @@ namespace ZeroTouchTekla.Profiles
         }
         void SkewLongitudinalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OLR_SecondDiameter"];
-            string spacing = Program.ExcelDictionary["OLR_Spacing"];
+            string rebarSize = Program.ExcelDictionary["ILR_SecondDiameter"];
+            string spacing = Program.ExcelDictionary["ILR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_OLR";
+            rebarSet.RebarProperties.Name = "RTW_ILR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -587,13 +590,13 @@ namespace ZeroTouchTekla.Profiles
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
-        void BottomOuterLongitudinalRebar()
+        void BottomInnerLongitudinalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OLR_Diameter"];
-            string spacing = Program.ExcelDictionary["OLR_Spacing"];
-            double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
+            string rebarSize = Program.ExcelDictionary["ILR_Diameter"];
+            string spacing = Program.ExcelDictionary["ILR_Spacing"];
+            double startOffset = Convert.ToDouble(Program.ExcelDictionary["ILR_StartOffset"]);
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_OLR";
+            rebarSet.RebarProperties.Name = "RTW_ILR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -1239,7 +1242,7 @@ namespace ZeroTouchTekla.Profiles
 
                 var innerFace = new RebarLegFace();
                 innerFace.Contour.AddContourPoint(new ContourPoint(new Point(ProfilePoints[0][0].X, ProfilePoints[0][5].Y, ProfilePoints[0][0].Z), null));
-                innerFace.Contour.AddContourPoint(new ContourPoint(new Point(ProfilePoints[1][0].X, ProfilePoints[1][5].Y + newoffset, ProfilePoints[1][0].Z), null));
+                innerFace.Contour.AddContourPoint(new ContourPoint(new Point(ProfilePoints[1][0].X, ProfilePoints[1][5].Y, ProfilePoints[1][0].Z), null));
                 innerFace.Contour.AddContourPoint(new ContourPoint(endLeftTopPoint, null));
                 innerFace.Contour.AddContourPoint(new ContourPoint(startLeftTopPoint, null));
                 rebarSet.LegFaces.Add(innerFace);

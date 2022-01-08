@@ -12,7 +12,7 @@ namespace ZeroTouchTekla.Profiles
         public RTW(Beam beam) : base(beam)
         {
             SetFields(beam);
-            SetProfilePoints(beam);
+            SetProfilePoints();
         }
         #endregion
         #region PublicMethods
@@ -37,15 +37,12 @@ namespace ZeroTouchTekla.Profiles
                 _height2 = _height;
             }
         }
-        void SetProfilePoints(Beam beam)
-        {
-            
+        void SetProfilePoints()
+        {            
             double hToW = (BottomWidth - (TopWidth - CorniceWidth)) / Height;
             double bottomWidth2 = hToW * Height2 + (TopWidth - CorniceWidth);
             double distanceToMid = Height > Height2 ? Height / 2.0 : Height2 / 2.0;
             double fullWidth = _corniceWidth + (bottomWidth2>_bottomWidth?bottomWidth2:_bottomWidth);
-            double firstWidth = _corniceWidth + _bottomWidth;
-            double secondWidth = _corniceWidth + bottomWidth2;
 
             Point p0 = new Point(0, -distanceToMid, fullWidth / 2.0 - _corniceWidth);
             Point p1 = new Point(0, p0.Y+Height - CorniceHeight, p0.Z);

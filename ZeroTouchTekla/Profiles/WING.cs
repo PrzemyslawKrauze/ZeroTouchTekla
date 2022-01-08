@@ -39,8 +39,6 @@ namespace ZeroTouchTekla.Profiles
             _ctth = (double)hashtable["CtTH"];
             _cd = (double)hashtable["CD"];
             _ctbh = (double)hashtable["CtBH"];
-            int i = 0;
-
         }
         new public void Create()
         {
@@ -85,9 +83,18 @@ namespace ZeroTouchTekla.Profiles
             }
             else
             {
-                RTWS rtws = new RTWS(_beam);
-                rtws.Create();
-                element = rtws;
+                RTWS rtws = element as RTWS;
+                if (componentName.Contains("Reversed"))
+                {
+                    SetRTWSProfilePointsReversed(element);
+                    _isReversed = true;
+                }
+                else
+                {
+                    SetRTWSProfilePoints(element);
+                    _isReversed = false;
+                }
+                EditRTWSRebar(rtws, selectedRebars);
             }
         }
         #region RTWMethods
@@ -145,9 +152,9 @@ namespace ZeroTouchTekla.Profiles
             List<List<Point>> correctedPoints = new List<List<Point>>();
 
             Point p00 = profilePoints[0][0];
-            Point p01 = new Point(p00.X, p00.Y + correctedHeight1 - SOCH, p00.Z);
+            Point p01 = new Point(p00.X, p00.Y + rtw.Height - SOCH, p00.Z);
             Point p03 = profilePoints[0][5];
-            Point p02 = new Point(p00.X, p01.Y, p01.Z - rtw.BottomWidth + s *  (correctedHeight1 - SOCH));
+            Point p02 = new Point(p00.X, p01.Y, p01.Z - rtw.BottomWidth + s *  (rtw.Height - SOCH));
             correctedPoints.Add(new List<Point> { p00, p01, p02, p03 });
 
             Point p10 = new Point(p00.X + SCD, p00.Y, p00.Z);
@@ -202,9 +209,9 @@ namespace ZeroTouchTekla.Profiles
             List<List<Point>> correctedPoints = new List<List<Point>>();
 
             Point p00 = profilePoints[1][0];
-            Point p01 = new Point(p00.X, p00.Y + correctedHeight1 - SOCH, p00.Z);
+            Point p01 = new Point(p00.X, p00.Y + rtw.Height2 - SOCH, p00.Z);
             Point p03 = profilePoints[1][5];
-            Point p02 = new Point(p00.X, p01.Y, p01.Z - secondBottomWidth + s * (correctedHeight1 - SOCH));
+            Point p02 = new Point(p00.X, p01.Y, p01.Z - secondBottomWidth + s * (rtw.Height2 - SOCH));
             correctedPoints.Add(new List<Point> { p00, p01, p02, p03 });
 
             Point p10 = new Point(p00.X - SCD, p00.Y, p00.Z);
@@ -274,6 +281,22 @@ namespace ZeroTouchTekla.Profiles
             bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedStartPoint, null));
             rebarLegFaces[1] = bottomFace;
             bool succes = rebarSet.Modify();
+
+            ModelObjectEnumerator modelObjectEnumerator = rebarSet.GetRebarModifiers();
+            List<ModelObject> modelObjectList = Utility.ToList(modelObjectEnumerator);
+            RebarPropertyModifier rebarPropertyModifier = (from mo in modelObjectList
+                                                           where mo.GetType() == typeof(RebarPropertyModifier)
+                                                           select mo as RebarPropertyModifier).FirstOrDefault();
+            if (rebarPropertyModifier != null)
+            {
+                var contour = new Contour();
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+                contour.AddContourPoint(new ContourPoint(correctedP21, null));
+                contour.AddContourPoint(new ContourPoint(correctedP51, null));
+                rebarPropertyModifier.Curve = contour;
+                rebarPropertyModifier.Modify();
+            }
 
             new Model().CommitChanges();
         }
@@ -672,6 +695,234 @@ namespace ZeroTouchTekla.Profiles
                 int secondNumber = _isReversed ? 1 : 0;
                 gl.Curve.ContourPoints[secondNumber] = new ContourPoint(correctedEndPoint, null);
             }
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        #endregion
+        #region RTWSMethods
+        void EditRTWSRebar(RTWS rtws, List<RebarSet> rebarSets)
+        {
+            foreach (RebarSet rs in rebarSets)
+            {
+                string methodName = string.Empty;
+                rs.GetUserProperty(RebarCreator.MethodName, ref methodName);
+                switch (methodName)
+                {
+                    
+                    case "OuterVerticalRebar":
+                        RTWSEditOuterVerticalRebar(rtws, rs);
+                        break;
+                    case "BottomInnerVerticalRebar":
+                        RTWSEditBottomInnerVerticalRebar(rtws, rs);
+                        break;
+                    case "TopInnerVerticalRebar":
+                        RTWSEditTopInnerVerticalRebar(rtws, rs);
+                        break;
+                }
+            }
+        }
+        void SetRTWSProfilePoints(Element element)
+        {
+            RTWS rtws = element as RTWS;
+            double correctedHeight1 = rtws.Height - (rtws.Height - rtws.Height2) * (SCD) / rtws.Length;
+            double correctedHeight2 = rtws.Height - (rtws.Height - rtws.Height2) * (rtws.Length - CD) / rtws.Length;
+
+            List<List<Point>> profilePoints = rtws.GetProfilePoints();
+            List<List<Point>> correctedPoints = new List<List<Point>>();
+
+            Point p00 = profilePoints[0][0];
+            Point p01 = new Point(p00.X, p00.Y + rtws.Height - SOCH, p00.Z);
+            Point p02 = new Point(p00.X, p01.Y, p01.Z - rtws.TopWidth+rtws.CorniceWidth);
+            Point p05 = profilePoints[0][7];
+            Point p04 = profilePoints[0][6];
+            Point p03 = profilePoints[0][5];           
+            correctedPoints.Add(new List<Point> { p00, p01, p02, p03,p04,p05 });
+
+            Point p10 = new Point(p00.X + SCD, p00.Y, p00.Z);
+            Point p11 = new Point(p10.X, p10.Y + correctedHeight1 - SICH, p10.Z);
+            Point p12 = new Point(p10.X, p11.Y, p11.Z*rtws.TopWidth+rtws.CorniceWidth);
+            Point p13 = new Point(p10.X, p03.Y, p03.Z);
+            Point p14 = new Point(p10.X, p04.Y, p04.Z);
+            Point p15 = new Point(p10.X, p05.Y, p05.Z);
+            correctedPoints.Add(new List<Point> { p10, p11, p12, p13,p14,p15 });
+
+            Point p20 = p10;
+            Point p21 = new Point(p20.X, p20.Y + correctedHeight1 - rtws.CorniceHeight, p20.Z);
+            Point p22 = new Point(p21.X, p21.Y, p21.Z + rtws.CorniceWidth);
+            Point p23 = new Point(p22.X, p22.Y + rtws.CorniceHeight, p22.Z);
+            Point p24 = new Point(p23.X, p23.Y, p23.Z - rtws.TopWidth);
+            Point p27 = new Point(p20.X, p05.Y, p05.Z);
+            Point p26 = new Point(p27.X, p04.Y, p04.Z);
+            Point p25 = new Point(p27.X, p03.Y, p03.Z);
+            correctedPoints.Add(new List<Point> { p20, p21, p22, p23, p24, p25,p26,p27 });
+
+            Point p30 = new Point(profilePoints[1][0].X - CD, p20.Y, p20.Z);
+            Point p31 = new Point(p30.X, p30.Y + correctedHeight1 - rtws.CorniceHeight, p30.Z);
+            Point p32 = new Point(p30.X, p31.Y, p31.Z + rtws.CorniceWidth);
+            Point p33 = new Point(p32.X, p32.Y + rtws.CorniceHeight, p32.Z);
+            Point p34 = new Point(p33.X, p33.Y, p33.Z - rtws.TopWidth);
+            Point p37 = new Point(p30.X, p05.Y, p05.Z);
+            Point p36 = new Point(p37.X, p04.Y, p04.Z);
+            Point p35 = new Point(p37.X, p03.Y, p03.Z);
+            correctedPoints.Add(new List<Point> { p30, p31, p32, p33, p34, p35,p36,p37 });
+
+            Point p40 = new Point(p30.X, p30.Y + CtBH, p30.Z);
+            Point p41 = new Point(p40.X, p30.Y + correctedHeight2 - rtws.CorniceHeight, p40.Z);
+            Point p42 = p32;
+            Point p43 = p33;
+            Point p44 = p34;
+            Point p45 = new Point(p40.X, p40.Y, p40.Z - rtws.TopWidth + rtws.CorniceWidth);
+            correctedPoints.Add(new List<Point> { p40, p41, p42, p43, p44, p45 });
+
+            Point p50 = new Point(profilePoints[1][0].X, p30.Y + rtws.Height2 - CtTH, p30.Z);
+            Point p51 = new Point(p50.X, p30.Y + rtws.Height2 - rtws.CorniceHeight, p50.Z);
+            Point p52 = new Point(p51.X, p51.Y, p51.Z + rtws.CorniceWidth);
+            Point p53 = new Point(p52.X, p52.Y + rtws.CorniceHeight, p52.Z);
+            Point p54 = new Point(p53.X, p53.Y, p53.Z - rtws.TopWidth);
+            Point p55 = new Point(p50.X, p50.Y, p50.Z - rtws.TopWidth + rtws.CorniceWidth);
+            correctedPoints.Add(new List<Point> { p50, p51, p52, p53, p54, p55 });
+
+            ProfilePoints = correctedPoints;
+        }
+        void SetRTWSProfilePointsReversed(Element element)
+        {
+            RTW rtws = element as RTW;
+            double correctedHeight1 = rtws.Height2 - (rtws.Height2 - rtws.Height) * (SCD) / rtws.Length;
+            double correctedHeight2 = rtws.Height2 - (rtws.Height2 - rtws.Height) * (rtws.Length - CD) / rtws.Length;
+            double s = (rtws.BottomWidth - (rtws.TopWidth - rtws.CorniceWidth)) / rtws.Height;
+            double secondBottomWidth = rtws.TopWidth - rtws.CorniceWidth + rtws.Height2 * s;
+
+            List<List<Point>> profilePoints = rtws.GetProfilePoints();
+            List<List<Point>> correctedPoints = new List<List<Point>>();
+
+            Point p00 = profilePoints[1][0];
+            Point p01 = new Point(p00.X, p00.Y + rtws.Height - SOCH, p00.Z);
+            Point p03 = profilePoints[1][5];
+            Point p02 = new Point(p00.X, p01.Y, p01.Z - secondBottomWidth + s * (rtws.Height - SOCH));
+            correctedPoints.Add(new List<Point> { p00, p01, p02, p03 });
+
+            Point p10 = new Point(p00.X - SCD, p00.Y, p00.Z);
+            Point p11 = new Point(p10.X, p10.Y + correctedHeight1 - SICH, p10.Z);
+            Point p12 = new Point(p10.X, p11.Y, profilePoints[1][4].Z - s * SICH);
+            Point p13 = new Point(p10.X, p03.Y, profilePoints[1][4].Z - s * correctedHeight1);
+            correctedPoints.Add(new List<Point> { p10, p11, p12, p13 });
+
+            Point p20 = p10;
+            Point p21 = new Point(p20.X, p20.Y + correctedHeight1 - rtws.CorniceHeight, p20.Z);
+            Point p22 = new Point(p21.X, p21.Y, p21.Z + rtws.CorniceWidth);
+            Point p23 = new Point(p22.X, p22.Y + rtws.CorniceHeight, p22.Z);
+            Point p24 = new Point(p23.X, p23.Y, p23.Z - rtws.TopWidth);
+            Point p25 = new Point(p20.X, p13.Y, p24.Z - s * correctedHeight1);
+            correctedPoints.Add(new List<Point> { p20, p21, p22, p23, p24, p25 });
+
+            Point p30 = new Point(profilePoints[0][0].X + CD, p20.Y, p20.Z);
+            Point p31 = new Point(p30.X, p30.Y + correctedHeight2 - rtws.CorniceHeight, p30.Z);
+            Point p32 = new Point(p30.X, p31.Y, p31.Z + rtws.CorniceWidth);
+            Point p33 = new Point(p32.X, p32.Y + rtws.CorniceHeight, p32.Z);
+            Point p34 = new Point(p33.X, p33.Y, p33.Z - rtws.TopWidth);
+            Point p35 = new Point(p30.X, p25.Y, p34.Z - s * correctedHeight2);
+            correctedPoints.Add(new List<Point> { p30, p31, p32, p33, p34, p35 });
+
+            Point p40 = new Point(p30.X, p30.Y + CtBH, p30.Z);
+            Point p41 = new Point(p40.X, p30.Y + correctedHeight2 - rtws.CorniceHeight, p40.Z);
+            Point p42 = new Point(p41.X, p41.Y, p41.Z + rtws.CorniceWidth);
+            Point p43 = new Point(p42.X, p42.Y + rtws.CorniceHeight, p42.Z);
+            Point p44 = new Point(p43.X, p43.Y, p43.Z - rtws.TopWidth);
+            Point p45 = new Point(p30.X, p40.Y, p44.Z - s * (correctedHeight2 - CtBH));
+            correctedPoints.Add(new List<Point> { p40, p41, p42, p43, p44, p45 });
+
+            Point p50 = new Point(profilePoints[0][0].X, p30.Y + rtws.Height - CtTH, p30.Z);
+            Point p51 = new Point(p50.X, p30.Y + rtws.Height - rtws.CorniceHeight, p50.Z);
+            Point p52 = new Point(p51.X, p51.Y, p51.Z + rtws.CorniceWidth);
+            Point p53 = new Point(p52.X, p52.Y + rtws.CorniceHeight, p52.Z);
+            Point p54 = new Point(p53.X, p53.Y, p53.Z - rtws.TopWidth);
+            Point p55 = new Point(p50.X, p50.Y, p54.Z - s * CtTH);
+            correctedPoints.Add(new List<Point> { p50, p51, p52, p53, p54, p55 });
+
+            ProfilePoints = correctedPoints;
+        }
+        void RTWSEditOuterVerticalRebar(RTWS rtws,RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            Point correctedP51 = new Point(ProfilePoints[5][1].X, ProfilePoints[5][1].Y + rtws.CorniceHeight, ProfilePoints[5][1].Z);
+            Point correctedP21 = new Point(ProfilePoints[2][1].X, ProfilePoints[2][1].Y + rtws.CorniceHeight, ProfilePoints[2][1].Z);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP51, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(correctedP21, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            rebarLegFaces[0] = mainFace;
+
+            Point offsetedStartPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y, ProfilePoints[0][0].Z + 1000);
+            Point offsetedEndPoint = new Point(ProfilePoints[3][0].X, ProfilePoints[3][0].Y, ProfilePoints[3][0].Z + 1000);
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedEndPoint, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedStartPoint, null));
+            rebarLegFaces[1] = bottomFace;
+            bool succes = rebarSet.Modify();
+
+            ModelObjectEnumerator modelObjectEnumerator = rebarSet.GetRebarModifiers();
+            List<ModelObject> modelObjectList = Utility.ToList(modelObjectEnumerator);
+            RebarPropertyModifier rebarPropertyModifier = (from mo in modelObjectList
+                                                           where mo.GetType() == typeof(RebarPropertyModifier)
+                                                           select mo as RebarPropertyModifier).FirstOrDefault();
+            if (rebarPropertyModifier != null)
+            {
+                var contour = new Contour();
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+                contour.AddContourPoint(new ContourPoint(correctedP21, null));
+                contour.AddContourPoint(new ContourPoint(correctedP51, null));
+                rebarPropertyModifier.Curve = contour;
+                rebarPropertyModifier.Modify();
+            }
+
+            new Model().CommitChanges();
+        }
+        void RTWSEditBottomInnerVerticalRebar(RTWS rtw, RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            rebarLegFaces[0] = mainFace;
+
+            Point offsetedStartPoint = new Point(ProfilePoints[0][5].X, ProfilePoints[0][5].Y, ProfilePoints[0][5].Z - 1000);
+            Point offsetedEndPoint = new Point(ProfilePoints[3][7].X, ProfilePoints[3][7].Y, ProfilePoints[3][7].Z - 1000);
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedEndPoint, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(offsetedStartPoint, null));
+            rebarLegFaces[1] = bottomFace;
+        
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditTopInnerVerticalRebar(RTWS rtw, RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][5], null));
+            rebarLegFaces[0] = mainFace;
 
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();

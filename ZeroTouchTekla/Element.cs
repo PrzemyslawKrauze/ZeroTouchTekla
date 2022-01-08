@@ -20,10 +20,12 @@ namespace ZeroTouchTekla
         { }
         public void CreateSingle(string barName)
         { }
+
         public List<List<Point>> GetProfilePoints()
         {
             return ProfilePoints;
         }
+
         protected void SetRebarCreatorProperties(Beam beam)
         {
             beam.GetUserProperty("__CovThickSides", ref SideCover);
