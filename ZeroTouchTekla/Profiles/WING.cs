@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
-using Tekla.Structures.Geometry3d;
-using Tekla.Structures.Model;
-using System.Text.RegularExpressions;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
+using Tekla.Structures.Geometry3d;
+using Tekla.Structures.Model;
 
 namespace ZeroTouchTekla.Profiles
 {
@@ -719,6 +719,47 @@ namespace ZeroTouchTekla.Profiles
                     case "TopInnerVerticalRebar":
                         RTWSEditTopInnerVerticalRebar(rtws, rs);
                         break;
+                    case "SkewVerticalRebar":
+                        RTWSEditSkewVerticalRebar(rtws, rs);
+                        break;
+                    case "OuterLongitudinalRebar":
+                        RTWSEditOuterLongitudinalRebar(rtws, rs);
+                        break;
+                    case "TopInnerLongitudinalRebar":
+                        RTWSEditTopInnerLongitudinalRebar(rtws, rs);
+                        break;
+                    case "SkewLongitudinalRebar":
+                        RTWSEditSkewLongitudinalRebar(rtws, rs);
+                        break;
+                    case "BottomInnerLongitudinalRebar":
+                        RTWSEditBottomInnerLongitudinalRebar(rtws, rs);
+                        break;
+                    case "CornicePerpendicularRebar":
+                        RTWSEditCornicePerpendicularRebar(rtws, rs);
+                        break;
+                    case "CorniceLongitudinalRebar":
+                        RTWSEditCorniceLongitudinalRebar(rtws, rs);
+                        break;
+                    case "BottomClosingCShapeRebar":
+                        int n1 = 0;
+                        rs.GetUserProperty(RebarCreator.MethodInput, ref n1);
+                        RTWSEditBottomClosingCShapeRebar(rtws, rs,n1);
+                        break;
+                    case "SkewClosingCShapeRebar":
+                        int n2 = 0;
+                        rs.GetUserProperty(RebarCreator.MethodInput, ref n2);
+                        RTWSEditSkewClosingCShapeRebar(rtws, rs, n2);
+                        break;
+                    case "TopClosingCShapeRebar":
+                        int n3 = 0;
+                        rs.GetUserProperty(RebarCreator.MethodInput, ref n3);
+                        RTWSEditTopClosingCShapeRebar(rtws, rs, n3);
+                        break;
+                    case "ClosingLongitudinalRebar":
+                        int n4 = 0;
+                        rs.GetUserProperty(RebarCreator.MethodInput, ref n4);
+                        RTWSEditClosingLongitudinalRebar(rtws, rs, n4);
+                        break;
                 }
             }
         }
@@ -741,7 +782,7 @@ namespace ZeroTouchTekla.Profiles
 
             Point p10 = new Point(p00.X + SCD, p00.Y, p00.Z);
             Point p11 = new Point(p10.X, p10.Y + correctedHeight1 - SICH, p10.Z);
-            Point p12 = new Point(p10.X, p11.Y, p11.Z*rtws.TopWidth+rtws.CorniceWidth);
+            Point p12 = new Point(p10.X, p11.Y, p11.Z-rtws.TopWidth+rtws.CorniceWidth);
             Point p13 = new Point(p10.X, p03.Y, p03.Z);
             Point p14 = new Point(p10.X, p04.Y, p04.Z);
             Point p15 = new Point(p10.X, p05.Y, p05.Z);
@@ -917,15 +958,351 @@ namespace ZeroTouchTekla.Profiles
 
             var mainFace = new RebarLegFace();
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
-            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
-            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][4], null));
-            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][5], null));
-            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));            
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));            
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));            
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));            
+            rebarLegFaces[0] = mainFace;
+            bool succes = rebarSet.Modify();
+
+            ModelObjectEnumerator modelObjectEnumerator = rebarSet.GetRebarModifiers();
+            List<ModelObject> modelObjectList = Utility.ToList(modelObjectEnumerator);
+            RebarEndDetailModifier rebarEndDetail = (from mo in modelObjectList
+                                                                      where mo.GetType() == typeof(RebarEndDetailModifier)
+                                                                      select mo as RebarEndDetailModifier).FirstOrDefault();
+
+            if (rebarEndDetail != null)
+            {
+                var contour = new Contour();
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+                contour.AddContourPoint(new ContourPoint(new Point(ProfilePoints[3][5].X-100,ProfilePoints[3][5].Y,ProfilePoints[3][5].Z), null));
+                rebarEndDetail.Curve = contour;
+                rebarEndDetail.Modify();
+            }
+
+            new Model().CommitChanges();
+        }
+        void RTWSEditSkewVerticalRebar(RTWS rtw, RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            Line startLine = new Line(ProfilePoints[0][3], ProfilePoints[0][4]);
+            Line endLine = new Line(ProfilePoints[3][6], ProfilePoints[3][5]);
+
+            GeometricPlane geometricPlane = new GeometricPlane(ProfilePoints[0][1], new Vector(1, 0, 0), new Vector(0, 1, 0));
+
+            Point startIntersection = Utility.GetExtendedIntersection(startLine, geometricPlane, 10);
+            Point endIntersection = Utility.GetExtendedIntersection(endLine, geometricPlane, 10);
+
+            Point cP06 = new Point(ProfilePoints[0][4].X, ProfilePoints[0][4].Y - 1000, ProfilePoints[0][4].Z);
+            Point cP05 = new Point(startIntersection.X, startIntersection.Y + 1000, startIntersection.Z);
+            Point cP36 = new Point(ProfilePoints[3][6].X, ProfilePoints[3][6].Y - 1000, ProfilePoints[3][6].Z);
+            Point cP35 = new Point(endIntersection.X, endIntersection.Y + 1000, endIntersection.Z);
+
+            var topFace = new RebarLegFace();
+            topFace.Contour.AddContourPoint(new ContourPoint(cP05, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(startIntersection, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(endIntersection, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(cP35, null));
+            rebarLegFaces[0] = topFace;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(startIntersection, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(endIntersection, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            rebarLegFaces[1] = mainFace;
+
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(cP06, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(cP36, null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            rebarLegFaces[2] = bottomFace;
+            bool succes = rebarSet.Modify();
+
+            RebarGuideline rebarGuideline = rebarSet.Guidelines.FirstOrDefault();
+            var contour = new Contour();
+            contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            rebarGuideline.Curve = contour;
+
+            ModelObjectEnumerator modelObjectEnumerator = rebarSet.GetRebarModifiers();
+            List<ModelObject> modelObjectList = Utility.ToList(modelObjectEnumerator);
+            List<RebarEndDetailModifier> rebarPropertyModifierList = (from mo in modelObjectList
+                                                                 where mo.GetType() == typeof(RebarEndDetailModifier)
+                                                                 select mo as RebarEndDetailModifier).ToList();
+
+            if (rebarPropertyModifierList!=null)
+            {
+                RebarEndDetailModifier rebarPropertyModifier1 = rebarPropertyModifierList[0];
+                var contour2 = new Contour();
+                contour2.AddContourPoint(new ContourPoint(cP05, null));
+                contour2.AddContourPoint(new ContourPoint(cP35, null));
+                rebarPropertyModifier1.Curve = contour2;
+                rebarPropertyModifier1.Modify();
+
+                RebarEndDetailModifier rebarPropertyModifier2 = rebarPropertyModifierList[1];
+                var contour3 = new Contour();
+                contour3.AddContourPoint(new ContourPoint(cP06, null));
+                contour3.AddContourPoint(new ContourPoint(cP36, null));
+                rebarPropertyModifier2.Curve = contour3;
+                rebarPropertyModifier2.Modify();
+            }
+
+            new Model().CommitChanges();
+        }
+        void RTWSEditBottomInnerLongitudinalRebar(RTWS rtws, RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
             rebarLegFaces[0] = mainFace;
 
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();
+        }
+        void RTWSEditOuterLongitudinalRebar(RTWS rtws, RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][1], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][1], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            rebarLegFaces[0] = mainFace;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditTopInnerLongitudinalRebar(RTWS rTWS,RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
+            rebarLegFaces[0] = mainFace;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditSkewLongitudinalRebar(RTWS rtws,RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            rebarLegFaces[0] = mainFace;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditCornicePerpendicularRebar(RTWS rtws, RebarSet rebarSet)
+        {
+            RebarGuideline rebarGuideline = rebarSet.Guidelines.FirstOrDefault();
+            var contour = new Contour();
+            contour.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));
+            rebarGuideline.Curve = contour;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditCorniceLongitudinalRebar(RTWS rtws, RebarSet rebarSet)
+        {
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][3], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][3], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][2], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][2], null));
+            rebarLegFaces[0] = mainFace;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditBottomClosingCShapeRebar(RTWS rtws, RebarSet rebarSet, int number)
+        {
+            if (number == 0)
+            {
+                rebarSet.Delete();
+                return;
+            }
+
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            Point cP36 = new Point(ProfilePoints[3][0].X, ProfilePoints[3][6].Y, ProfilePoints[3][0].Z);
+            Point cP06 = new Point(ProfilePoints[0][0].X, ProfilePoints[0][4].Y, ProfilePoints[0][0].Z);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(cP36, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
+            rebarLegFaces[0] = mainFace;
+
+            var innerFace =new RebarLegFace();
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            rebarLegFaces[1] = innerFace;
+
+            var outerFace = new RebarLegFace();
+            outerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP06, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP36, null));
+            rebarLegFaces[2] = outerFace;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+
+        }
+        void RTWSEditSkewClosingCShapeRebar(RTWS rtws, RebarSet rebarSet, int number)
+        {
+            if (number == 0)
+            {
+                rebarSet.Delete();
+                return;
+            }
+
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+
+            Point cP36 = new Point(ProfilePoints[3][0].X, ProfilePoints[3][6].Y, ProfilePoints[3][0].Z);
+            Point cP06 = new Point(ProfilePoints[0][0].X, ProfilePoints[0][4].Y, ProfilePoints[0][0].Z);
+            Point cP35 = new Point(ProfilePoints[3][0].X, ProfilePoints[3][5].Y, ProfilePoints[3][0].Z);
+            Point cP05 = new Point(ProfilePoints[0][0].X, ProfilePoints[0][3].Y, ProfilePoints[0][0].Z);
+
+            var mainFace = new RebarLegFace();
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(cP36, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(cP35, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
+            rebarLegFaces[0] = mainFace;
+
+            var innerFace = new RebarLegFace();
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            rebarLegFaces[1] = innerFace;
+
+            var outerFace = new RebarLegFace();
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP35    , null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP36, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP06, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP05, null));
+            rebarLegFaces[2] = outerFace;
+
+            bool succes = rebarSet.Modify();
+
+            new Model().CommitChanges();
+        }
+        void RTWSEditTopClosingCShapeRebar(RTWS rtws, RebarSet rebarSet,int number)
+        {
+            if (number == 0)
+            {
+                rebarSet.Delete();
+                return;
+            }
+
+            List<RebarLegFace> cRebarLegFaces = new List<RebarLegFace>();
+
+            Point cP51 = new Point(ProfilePoints[5][1].X, ProfilePoints[5][1].Y + rtws.CorniceHeight, ProfilePoints[5][1].Z);
+            Point cP21 = new Point(ProfilePoints[2][1].X, ProfilePoints[2][1].Y + rtws.CorniceHeight, ProfilePoints[2][1].Z);
+            Point cP25 = new Point(ProfilePoints[2][0].X, ProfilePoints[2][5].Y, ProfilePoints[2][0].Z);
+
+            var mainFaceBottom = new RebarLegFace();
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][0], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][0], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][5], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][5], null));
+            cRebarLegFaces.Add(mainFaceBottom);
+
+            var mainFaceTop = new RebarLegFace();
+            mainFaceTop.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][5], null));
+            mainFaceTop.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][0], null));
+            mainFaceTop.Contour.AddContourPoint(new ContourPoint(cP51, null));
+            mainFaceTop.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));
+            cRebarLegFaces.Add(mainFaceTop);
+
+            var innerFace = new RebarLegFace();
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][4], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][5], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][5], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][5], null));
+            innerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            cRebarLegFaces.Add(innerFace);
+
+            var outerFace = new RebarLegFace();
+            outerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[4][0], null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[5][0], null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP51, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP21, null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP25, null));
+            cRebarLegFaces.Add(outerFace);
+
+            rebarSet.LegFaces = cRebarLegFaces;
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+
+            RebarCreator.LayerDictionary[rebarSet.Identifier.ID] = new int[] { 1, 1, 2, 2 };
+        }
+        void RTWSEditClosingLongitudinalRebar(RTWS rtws,RebarSet rebarSet,int number)
+        {
+            if (number == 0)
+            {
+                rebarSet.Delete();
+                return;
+            }
+
+            List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
+            Point cP35 = new Point(ProfilePoints[3][0].X, ProfilePoints[3][5].Y, ProfilePoints[3][0].Z);
+
+            var mainFaceBottom = new RebarLegFace();
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(cP35, null));
+            rebarLegFaces[0]=mainFaceBottom;
+
+            bool succes = rebarSet.Modify();
+
+
+            var bottomLengthModifier = new RebarEndDetailModifier();
+            bottomLengthModifier.Father = rebarSet;
+            bottomLengthModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.END_OFFSET;
+            bottomLengthModifier.RebarLengthAdjustment.AdjustmentLength = 40 * Convert.ToDouble(rebarSet.RebarProperties.Size);
+            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(new Point(ProfilePoints[3][5].X,ProfilePoints[3][5].Y,ProfilePoints[3][5].Z+50), null));
+            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(cP35, null));
+            bool inserted = bottomLengthModifier.Insert();
+
+            new Model().CommitChanges();
+
         }
         #endregion
         #endregion

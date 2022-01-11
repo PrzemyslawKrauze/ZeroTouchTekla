@@ -103,16 +103,16 @@ namespace ZeroTouchTekla.Profiles
             CornicePerpendicularRebar();
 
             CorniceLongitudinalRebar();
-            BottomClosingCShapeRebar(true);
-            BottomClosingCShapeRebar(false);
+            BottomClosingCShapeRebar(0);
+            BottomClosingCShapeRebar(1);
 
-            TopClosingCShapeRebar(true);
-            TopClosingCShapeRebar(false);
-            SkewClosingCShapeRebar(true);
-            SkewClosingCShapeRebar(false);
+            TopClosingCShapeRebar(0);
+            TopClosingCShapeRebar(1);
+            SkewClosingCShapeRebar(0);
+            SkewClosingCShapeRebar(1);
 
-            ClosingLongitudinalRebar(true);
-            ClosingLongitudinalRebar(false);
+            ClosingLongitudinalRebar(0);
+            ClosingLongitudinalRebar(1);
 
             BottomCShapeRebar();
             TopCShapeRebar();
@@ -144,12 +144,12 @@ namespace ZeroTouchTekla.Profiles
                     CorniceLongitudinalRebar();
                     break;
                 case RebarType.CCSR:
-                    BottomClosingCShapeRebar(true);
-                    BottomClosingCShapeRebar(false);
+                    BottomClosingCShapeRebar(0);
+                    BottomClosingCShapeRebar(1);
                     break;
                 case RebarType.CLR:
-                    ClosingLongitudinalRebar(true);
-                    ClosingLongitudinalRebar(false);
+                    ClosingLongitudinalRebar(0);
+                    ClosingLongitudinalRebar(1);
                     break;
             }
         }
@@ -393,18 +393,26 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
+            Line startLine = new Line(ProfilePoints[0][6], ProfilePoints[0][5]);
+            Line endLine = new Line(ProfilePoints[1][6], ProfilePoints[1][5]);
+
+            GeometricPlane geometricPlane = new GeometricPlane(ProfilePoints[0][1], new Vector(1, 0, 0), new Vector(0, 1, 0));
+
+            Point startIntersection = Utility.GetExtendedIntersection(startLine, geometricPlane, 10);
+            Point endIntersection = Utility.GetExtendedIntersection(endLine, geometricPlane, 10);
+
             var topFace = new RebarLegFace();
-            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
-            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][5], null));
-            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
-            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            topFace.Contour.AddContourPoint(new ContourPoint(startIntersection, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+            topFace.Contour.AddContourPoint(new ContourPoint(endIntersection, null));
             rebarSet.LegFaces.Add(topFace);
 
             var mainFace = new RebarLegFace();
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][6], null));
             mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][6], null));
-            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][5], null));
-            mainFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(endIntersection, null));
+            mainFace.Contour.AddContourPoint(new ContourPoint(startIntersection, null));
             rebarSet.LegFaces.Add(mainFace);
 
             var bottomFace = new RebarLegFace();
@@ -752,13 +760,13 @@ namespace ZeroTouchTekla.Profiles
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
-        void BottomClosingCShapeRebar(bool isStart)
+        void BottomClosingCShapeRebar(int number)
         {
             string rebarSize = Program.ExcelDictionary["CCSR_Diameter"];
             string spacing = Program.ExcelDictionary["CCSR_Spacing"];
             double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_CCSR_" + isStart;
+            rebarSet.RebarProperties.Name = "RTW_CCSR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -767,7 +775,7 @@ namespace ZeroTouchTekla.Profiles
 
             Point leftBottom, rightBottom, rightTop, leftTop;
             Point endLeftBottom, endRightBottom, endRightTop, endLeftTop;
-            if (isStart)
+            if (number==0)
             {
                 leftBottom = ProfilePoints[0][0];
                 rightBottom = ProfilePoints[0][7];
@@ -849,16 +857,16 @@ namespace ZeroTouchTekla.Profiles
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod(),number);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
         }
-        void SkewClosingCShapeRebar(bool isStart)
+        void SkewClosingCShapeRebar(int number)
         {
             string rebarSize = Program.ExcelDictionary["CCSR_Diameter"];
             string spacing = Program.ExcelDictionary["CCSR_Spacing"];
             double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_CCSR_" + isStart;
+            rebarSet.RebarProperties.Name = "RTW_CCSR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -868,7 +876,7 @@ namespace ZeroTouchTekla.Profiles
 
             Point leftBottom, rightBottom, rightTop, leftTop;
             Point endLeftBottom, endRightBottom, endRightTop, endLeftTop;
-            if (isStart)
+            if (number==0)
             {
                 leftBottom = new Point(ProfilePoints[0][0].X, ProfilePoints[0][6].Y, ProfilePoints[0][0].Z);
                 rightBottom = ProfilePoints[0][6];
@@ -950,26 +958,25 @@ namespace ZeroTouchTekla.Profiles
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod(),number);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
         }
-        void TopClosingCShapeRebar(bool isStart)
+        void TopClosingCShapeRebar(int number)
         {
             string rebarSize = Program.ExcelDictionary["CCSR_Diameter"];
             string spacing = Program.ExcelDictionary["CCSR_Spacing"];
             double startOffset = Convert.ToDouble(Program.ExcelDictionary["OLR_StartOffset"]);
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_CCSR_" + isStart;
+            rebarSet.RebarProperties.Name = "RTW_CCSR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
             rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
-            rebarSet.SetUserProperty("User field 1", 0);
 
             Point leftBottom, rightBottom, rightTop, leftTop;
             Point endLeftBottom, endRightBottom, endRightTop, endLeftTop;
-            if (isStart)
+            if (number==0)
             {
                 leftBottom = new Point(ProfilePoints[0][0].X, ProfilePoints[0][5].Y, ProfilePoints[0][0].Z);
                 rightBottom = ProfilePoints[0][5];
@@ -1051,15 +1058,15 @@ namespace ZeroTouchTekla.Profiles
             outerEndDetailModifier.Insert();
             new Model().CommitChanges();
 
-            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod(),number);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2 });
         }
-        void ClosingLongitudinalRebar(bool isStart)
+        void ClosingLongitudinalRebar(int number)
         {
             string rebarSize = Program.ExcelDictionary["CLR_Diameter"];
             string spacing = Program.ExcelDictionary["CLR_Spacing"];
             var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "RTW_CLR_" + isStart;
+            rebarSet.RebarProperties.Name = "RTW_CLR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
@@ -1067,7 +1074,7 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.LayerOrderNumber = 1;
 
             Point leftBottom, rightBottom, rightTop, leftTop, rightMid1, rightMid2; ;
-            if (isStart)
+            if (number==0)
             {
                 leftBottom = ProfilePoints[0][0];
                 rightBottom = ProfilePoints[0][7];
@@ -1113,7 +1120,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod(),number);
             RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void BottomCShapeRebar()
