@@ -760,6 +760,12 @@ namespace ZeroTouchTekla.Profiles
                         rs.GetUserProperty(RebarCreator.MethodInput, ref n4);
                         RTWSEditClosingLongitudinalRebar(rtws, rs, n4);
                         break;
+                    case "BottomCShapeRebar":
+                        RTWSEditBottomCShapeRebar(rtws, rs);
+                        break;
+                    case "TopCShapeRebar":
+                        RTWSEditTopCShapeRebar(rtws, rs);
+                        break;
                 }
             }
         }
@@ -1210,7 +1216,7 @@ namespace ZeroTouchTekla.Profiles
             rebarLegFaces[1] = innerFace;
 
             var outerFace = new RebarLegFace();
-            outerFace.Contour.AddContourPoint(new ContourPoint(cP35    , null));
+            outerFace.Contour.AddContourPoint(new ContourPoint(cP35, null));
             outerFace.Contour.AddContourPoint(new ContourPoint(cP36, null));
             outerFace.Contour.AddContourPoint(new ContourPoint(cP06, null));
             outerFace.Contour.AddContourPoint(new ContourPoint(cP05, null));
@@ -1292,7 +1298,6 @@ namespace ZeroTouchTekla.Profiles
 
             bool succes = rebarSet.Modify();
 
-
             var bottomLengthModifier = new RebarEndDetailModifier();
             bottomLengthModifier.Father = rebarSet;
             bottomLengthModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.END_OFFSET;
@@ -1303,6 +1308,52 @@ namespace ZeroTouchTekla.Profiles
 
             new Model().CommitChanges();
 
+        }
+        void RTWSEditBottomCShapeRebar(RTWS rtws,RebarSet rebarSet)
+        {
+            GeometricPlane plane = new GeometricPlane(ProfilePoints[3][0], new Vector(0, 1, 0), new Vector(0, 0, 1));
+
+            RebarGuideline gl = rebarSet.Guidelines.FirstOrDefault();
+            System.Collections.ArrayList arrayList = gl.Curve.ContourPoints;
+            var startPoint = arrayList[0] as ContourPoint;
+            var endPoint = arrayList[1] as ContourPoint;
+            Line glLine = new Line(startPoint, endPoint);
+
+            Point correctedEndPoint = Utility.GetExtendedIntersection(glLine, plane, 2);
+
+            gl.Curve.ContourPoints[1] = new ContourPoint(correctedEndPoint, null);
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
+        }
+        void RTWSEditTopCShapeRebar(RTWS rtws, RebarSet rebarSet)
+        {
+            Vector longitudinal = Utility.GetVectorFromTwoPoints(ProfilePoints[4][0], ProfilePoints[5][0]);
+            Vector perpendicular = Utility.GetVectorFromTwoPoints(ProfilePoints[4][0], ProfilePoints[4][5]);
+            GeometricPlane skewPlane = new GeometricPlane(ProfilePoints[4][0], longitudinal,perpendicular);
+
+            GeometricPlane verticalPlane = new GeometricPlane(ProfilePoints[1][0], new Vector(0, 1, 0), new Vector(0, 0, 1));
+
+            RebarGuideline gl = rebarSet.Guidelines.FirstOrDefault();
+            System.Collections.ArrayList arrayList = gl.Curve.ContourPoints;
+            var startPoint = arrayList[0] as ContourPoint;
+            var endPoint = arrayList[1] as ContourPoint;
+            Line glLine = new Line(startPoint, endPoint);
+
+            if(startPoint.Y<=ProfilePoints[5][0].Y)
+            {
+                Point endIntersectionPoint = Utility.GetExtendedIntersection(glLine, skewPlane, 2);
+                gl.Curve.ContourPoints[1] = new ContourPoint(endIntersectionPoint, null);
+                gl.Spacing.EndOffset = 300;
+            }
+
+            if(startPoint.Y>=ProfilePoints[1][1].Y-50)
+            {
+                Point startIntersectionPoint = Utility.GetExtendedIntersection(glLine, verticalPlane, 2);
+                gl.Curve.ContourPoints[0] = new ContourPoint(startIntersectionPoint, null);
+            }
+
+            bool succes = rebarSet.Modify();
+            new Model().CommitChanges();
         }
         #endregion
         #endregion
