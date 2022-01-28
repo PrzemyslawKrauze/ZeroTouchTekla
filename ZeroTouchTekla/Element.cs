@@ -79,12 +79,12 @@ namespace ZeroTouchTekla
         }
         protected void PostRebarCreationMethod(RebarSet rebarSet, System.Reflection.MethodBase methodBase)
         {
-
             rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
             rebarSet.SetUserProperty(RebarCreator.MethodName, methodBase.Name);
             string diameter = rebarSet.RebarProperties.Size;
             rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
             rebarSet.SetUserProperty("__MIN_BAR_LENGTH", RebarCreator.MinLengthCoefficient * Convert.ToDouble(diameter));
+
         }
         protected void PostRebarCreationMethod(RebarSet rebarSet, System.Reflection.MethodBase methodBase, int input)
         {

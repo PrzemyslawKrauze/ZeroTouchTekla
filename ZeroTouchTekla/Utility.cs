@@ -133,5 +133,25 @@ namespace ZeroTouchTekla
             Point intersection = Intersection.LineSegmentToPlane(extendedLine, plane);
             return intersection;
         }
+        public static void MatchPoints(List<Point> edgePoints,ref List<Point> profilePoints)
+        {
+            for(int i=0;i<profilePoints.Count;i++)
+            {
+                Point p = profilePoints[i];
+                double distance = 9999999;
+                Point closesPoint = new Point(999999, 999999, 999999);
+                foreach (Point ep in edgePoints)
+                {
+                    double newDistance = Distance.PointToPoint(p, ep);
+                    
+                    if(newDistance<distance)
+                    {
+                        closesPoint = ep;
+                        distance = newDistance;
+                    }
+                }
+                profilePoints[i] = closesPoint;
+            }
+        }
     }
 }
