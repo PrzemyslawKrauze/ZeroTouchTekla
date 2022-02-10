@@ -23,7 +23,7 @@ namespace ZeroTouchTekla
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_OBJECT;
             ModelObject modelObject = picker.PickObject(pickObjectEnum);
-          
+
         }
         public static void CreateForPart(ProfileType profileType)
         {
@@ -45,6 +45,9 @@ namespace ZeroTouchTekla
                     Tekla.Structures.Model.UI.Picker secondPicker;
                     Tekla.Structures.Model.UI.Picker.PickObjectEnum secondPickObjectEnum;
                     Beam secondPart;
+                    Tekla.Structures.Model.UI.Picker thirdPicker;
+                    Tekla.Structures.Model.UI.Picker.PickObjectEnum thirdPickObjectEnum;
+                    Beam thirdPart;
                     switch (profileType)
                     {
                         case ProfileType.FTG:
@@ -71,8 +74,10 @@ namespace ZeroTouchTekla
                             clmn.Create();
                             break;
                         case ProfileType.ABT:
-                            ABT abt = new ABT(part);
-                            abt.Create();
+                            // ABT abt = new ABT(part);
+                            // abt.Create();
+                            DABT dabt1 = new DABT(part);
+                            dabt1.Create();
                             break;
                         case ProfileType.DABT:
                             secondPicker = new Tekla.Structures.Model.UI.Picker();
@@ -81,8 +86,21 @@ namespace ZeroTouchTekla
                             DABT dabt = new DABT(part, secondPart);
                             dabt.Create();
                             break;
+                        case ProfileType.TABT:
+                            secondPicker = new Tekla.Structures.Model.UI.Picker();
+                            secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+                            secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
+                            thirdPicker = new Tekla.Structures.Model.UI.Picker();
+                            thirdPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+                            thirdPart = picker.PickObject(thirdPickObjectEnum) as Beam;
+                            DABT dabt3 = new DABT(part, secondPart, thirdPart);
+                            dabt3.Create();
+                            break;
+                        case ProfileType.APS:
+                            APS aps = new APS(part);
+                            aps.Create();
+                            break;
                     }
-
                     //Restore user work plane
                     model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
                     model.CommitChanges();
@@ -103,7 +121,7 @@ namespace ZeroTouchTekla
             ModelInfo info = model.GetInfo();
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_OBJECT;
-            ModelObject modelObject = picker.PickObject(pickObjectEnum);          
+            ModelObject modelObject = picker.PickObject(pickObjectEnum);
             try
             {
                 Beam part = modelObject as Beam;
@@ -121,8 +139,8 @@ namespace ZeroTouchTekla
                         case ProfileType.WING:
                             WING wing = new WING(part);
                             wing.Create();
-                            break;                       
-                    
+                            break;
+
                     }
 
                     //Restore user work plane
@@ -275,7 +293,9 @@ namespace ZeroTouchTekla
             CLMN,
             ABT,
             DABT,
-            WING
+            TABT,
+            WING,
+            APS
         }
         public static int FatherID;
         static ProfileType GetProfileType(string profileString)

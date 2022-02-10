@@ -88,6 +88,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="APS.cs" />
     <Compile Include="Profiles\ABT.cs" />
     <Compile Include="Profiles\CLMN.cs" />
     <Compile Include="Profiles\DABT.cs" />
