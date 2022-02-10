@@ -21,99 +21,77 @@ namespace ZeroTouchTekla
 
             // Creates the filter expressions
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_OBJECT;
-            ModelObject modelObject = picker.PickObject(pickObjectEnum);
+            Tekla.Structures.Model.UI.Picker.PickObjectsEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS;
+            ModelObjectEnumerator modelObject = picker.PickObjects(pickObjectEnum);
 
         }
         public static void CreateForPart(ProfileType profileType)
         {
             Model model = new Model();
+
+            //Store current work plane
+            TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+
+            switch (profileType)
+            {
+                case ProfileType.FTG:
+                    FTG ftg = new FTG(PickPart());
+                    ftg.Create();
+                    break;
+                case ProfileType.RTW:
+                    RTW rtw = new RTW(PickPart());
+                    rtw.Create();
+                    break;
+                case ProfileType.DRTW:
+                    DRTW drtw = new DRTW(PickParts());
+                    drtw.Create();
+                    break;
+                case ProfileType.RTWS:
+                    RTWS rtws = new RTWS(PickPart());
+                    rtws.Create();
+                    break;
+                case ProfileType.CLMN:
+                    CLMN clmn = new CLMN(PickPart());
+                    clmn.Create();
+                    break;
+                case ProfileType.ABT:
+                    DABT dabt = new DABT(PickParts());
+                    dabt.Create();
+                    break;
+                case ProfileType.APS:
+                    APS aps = new APS(PickPart());
+                    aps.Create();
+                    break;
+            }
+
+            //Restore user work plane
+            model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+            model.CommitChanges();
+
+            ChangeLayer(model);
+            ChangeLayer(model);
+            LayerDictionary = new Dictionary<int, int[]>();
+
+        }
+        static Part PickPart()
+        {
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-            try
+            Part modelObject = picker.PickObject(pickObjectEnum) as Part;
+            return modelObject;
+        }
+        static List<Part> PickParts()
+        {
+            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
+            Tekla.Structures.Model.UI.Picker.PickObjectsEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS;
+            ModelObjectEnumerator modelObjects = picker.PickObjects(pickObjectEnum);
+            List<ModelObject> modelObjectList = Utility.ToList(modelObjects);
+            List<Part> beamList = new List<Part>();
+            foreach (ModelObject mo in modelObjectList)
             {
-                Beam part = picker.PickObject(pickObjectEnum) as Beam;
-                FatherID = part.Identifier.ID;
-                if (part != null)
-                {
-                    //Store current work plane
-                    TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
-                    //Get beam local plane
-                    TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
-                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
-
-                    Tekla.Structures.Model.UI.Picker secondPicker;
-                    Tekla.Structures.Model.UI.Picker.PickObjectEnum secondPickObjectEnum;
-                    Beam secondPart;
-                    Tekla.Structures.Model.UI.Picker thirdPicker;
-                    Tekla.Structures.Model.UI.Picker.PickObjectEnum thirdPickObjectEnum;
-                    Beam thirdPart;
-                    switch (profileType)
-                    {
-                        case ProfileType.FTG:
-                            FTG ftg = new FTG(part);
-                            ftg.Create();
-                            break;
-                        case ProfileType.RTW:
-                            RTW rtw = new RTW(part);
-                            rtw.Create();
-                            break;
-                        case ProfileType.DRTW:
-                            secondPicker = new Tekla.Structures.Model.UI.Picker();
-                            secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-                            secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
-                            DRTW drtw = new DRTW(part, secondPart);
-                            drtw.Create();
-                            break;
-                        case ProfileType.RTWS:
-                            RTWS rtws = new RTWS(part);
-                            rtws.Create();
-                            break;
-                        case ProfileType.CLMN:
-                            CLMN clmn = new CLMN(part);
-                            clmn.Create();
-                            break;
-                        case ProfileType.ABT:
-                            // ABT abt = new ABT(part);
-                            // abt.Create();
-                            DABT dabt1 = new DABT(part);
-                            dabt1.Create();
-                            break;
-                        case ProfileType.DABT:
-                            secondPicker = new Tekla.Structures.Model.UI.Picker();
-                            secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-                            secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
-                            DABT dabt = new DABT(part, secondPart);
-                            dabt.Create();
-                            break;
-                        case ProfileType.TABT:
-                            secondPicker = new Tekla.Structures.Model.UI.Picker();
-                            secondPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-                            secondPart = picker.PickObject(secondPickObjectEnum) as Beam;
-                            thirdPicker = new Tekla.Structures.Model.UI.Picker();
-                            thirdPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-                            thirdPart = picker.PickObject(thirdPickObjectEnum) as Beam;
-                            DABT dabt3 = new DABT(part, secondPart, thirdPart);
-                            dabt3.Create();
-                            break;
-                        case ProfileType.APS:
-                            APS aps = new APS(part);
-                            aps.Create();
-                            break;
-                    }
-                    //Restore user work plane
-                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
-                    model.CommitChanges();
-                }
-
-                ChangeLayer(model);
-                ChangeLayer(model);
-                LayerDictionary = new Dictionary<int, int[]>();
+                beamList.Add(mo as Part);
             }
-            catch (System.ApplicationException)
-            {
-                Operation.DisplayPrompt("User interrupted!");
-            }
+            return beamList;
         }
         public static void CreateForComponent(ProfileType profileType)
         {
@@ -292,7 +270,6 @@ namespace ZeroTouchTekla
             RTWS,
             CLMN,
             ABT,
-            DABT,
             TABT,
             WING,
             APS

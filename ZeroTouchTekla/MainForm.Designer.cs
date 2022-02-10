@@ -39,9 +39,8 @@ namespace ZeroTouchTekla
             this.recreateRebarButton = new System.Windows.Forms.Button();
             this.utilityLabel = new System.Windows.Forms.Label();
             this.panel1 = new System.Windows.Forms.Panel();
-            this.TripleAbutmentButton = new System.Windows.Forms.Button();
+            this.APSButtonClick = new System.Windows.Forms.Button();
             this.WingButton = new System.Windows.Forms.Button();
-            this.DoubledAbutmentButton = new System.Windows.Forms.Button();
             this.AbutmentButton = new System.Windows.Forms.Button();
             this.RTWSButton = new System.Windows.Forms.Button();
             this.RTWDButton = new System.Windows.Forms.Button();
@@ -49,7 +48,6 @@ namespace ZeroTouchTekla
             this.RTWButton = new System.Windows.Forms.Button();
             this.creationLabel = new System.Windows.Forms.Label();
             this.TestButton = new System.Windows.Forms.Button();
-            this.APSButtonClick = new System.Windows.Forms.Button();
             this.utilityPanel.SuspendLayout();
             this.panel1.SuspendLayout();
             this.SuspendLayout();
@@ -144,9 +142,7 @@ namespace ZeroTouchTekla
             // panel1
             // 
             this.panel1.Controls.Add(this.APSButtonClick);
-            this.panel1.Controls.Add(this.TripleAbutmentButton);
             this.panel1.Controls.Add(this.WingButton);
-            this.panel1.Controls.Add(this.DoubledAbutmentButton);
             this.panel1.Controls.Add(this.AbutmentButton);
             this.panel1.Controls.Add(this.RTWSButton);
             this.panel1.Controls.Add(this.RTWDButton);
@@ -158,15 +154,15 @@ namespace ZeroTouchTekla
             this.panel1.Size = new System.Drawing.Size(200, 369);
             this.panel1.TabIndex = 9;
             // 
-            // TripleAbutmentButton
+            // APSButtonClick
             // 
-            this.TripleAbutmentButton.Location = new System.Drawing.Point(25, 206);
-            this.TripleAbutmentButton.Name = "TripleAbutmentButton";
-            this.TripleAbutmentButton.Size = new System.Drawing.Size(153, 23);
-            this.TripleAbutmentButton.TabIndex = 9;
-            this.TripleAbutmentButton.Text = "TripleAbutment";
-            this.TripleAbutmentButton.UseVisualStyleBackColor = true;
-            this.TripleAbutmentButton.Click += new System.EventHandler(this.OnTripledAbutmentButtonClick);
+            this.APSButtonClick.Location = new System.Drawing.Point(25, 264);
+            this.APSButtonClick.Name = "APSButtonClick";
+            this.APSButtonClick.Size = new System.Drawing.Size(153, 23);
+            this.APSButtonClick.TabIndex = 10;
+            this.APSButtonClick.Text = "Approach Slab";
+            this.APSButtonClick.UseVisualStyleBackColor = true;
+            this.APSButtonClick.Click += new System.EventHandler(this.OnAPSButtonClick);
             // 
             // WingButton
             // 
@@ -177,16 +173,6 @@ namespace ZeroTouchTekla
             this.WingButton.Text = "Wing";
             this.WingButton.UseVisualStyleBackColor = true;
             this.WingButton.Click += new System.EventHandler(this.OnWingButtonClick);
-            // 
-            // DoubledAbutmentButton
-            // 
-            this.DoubledAbutmentButton.Location = new System.Drawing.Point(25, 177);
-            this.DoubledAbutmentButton.Name = "DoubledAbutmentButton";
-            this.DoubledAbutmentButton.Size = new System.Drawing.Size(153, 23);
-            this.DoubledAbutmentButton.TabIndex = 7;
-            this.DoubledAbutmentButton.Text = "DoubledAbutment";
-            this.DoubledAbutmentButton.UseVisualStyleBackColor = true;
-            this.DoubledAbutmentButton.Click += new System.EventHandler(this.OnDoubledAbutmentClick);
             // 
             // AbutmentButton
             // 
@@ -258,16 +244,6 @@ namespace ZeroTouchTekla
             this.TestButton.UseVisualStyleBackColor = true;
             this.TestButton.Click += new System.EventHandler(this.OnTestButtonClick);
             // 
-            // APSButtonClick
-            // 
-            this.APSButtonClick.Location = new System.Drawing.Point(25, 264);
-            this.APSButtonClick.Name = "APSButtonClick";
-            this.APSButtonClick.Size = new System.Drawing.Size(153, 23);
-            this.APSButtonClick.TabIndex = 10;
-            this.APSButtonClick.Text = "Approach Slab";
-            this.APSButtonClick.UseVisualStyleBackColor = true;
-            this.APSButtonClick.Click += new System.EventHandler(this.OnAPSButtonClick);
-            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -310,9 +286,7 @@ namespace ZeroTouchTekla
         private System.Windows.Forms.Button RTWDButton;
         private System.Windows.Forms.Button RTWSButton;
         private System.Windows.Forms.Button AbutmentButton;
-        private System.Windows.Forms.Button DoubledAbutmentButton;
         private System.Windows.Forms.Button WingButton;
-        private System.Windows.Forms.Button TripleAbutmentButton;
         private System.Windows.Forms.Button APSButtonClick;
     }
 }

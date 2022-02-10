@@ -7,18 +7,17 @@ namespace ZeroTouchTekla.Profiles
 {
     public class DRTW : Element
     {
-        #region Constructor
-        public DRTW(Beam part) : base(part)
+        #region Constructor        
+        public DRTW(List<Part> parts):base(parts)
         {
-        }
-        public DRTW(Beam part, Beam secondPart) : base(part)
-        {
-            GetProfilePointsAndParameters(part, secondPart);
+            GetProfilePointsAndParameters(parts);
         }
         #endregion
         #region PublicMethods
-        public void GetProfilePointsAndParameters(Beam beam1, Beam beam2)
+        public void GetProfilePointsAndParameters(List<Part> partList)
         {
+            Beam beam1 = partList[0] as Beam;
+            Beam beam2 = partList[1] as Beam;
             string[] profileValues1 = GetProfileValues(beam1);
             string[] profileValues2 = GetProfileValues(beam2);
             //RTW Height*CorniceHeight*BottomWidth*TopWidth*CorniceWidth

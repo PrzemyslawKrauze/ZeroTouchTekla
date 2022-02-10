@@ -10,15 +10,16 @@ namespace ZeroTouchTekla.Profiles
     public class RTWS : Element
     {
         #region Constructor
-        public RTWS(Beam part) : base(part)
+        public RTWS(Part part) : base(part)
         {
             SetFields(part);
             SetProfilePoints();
         }
         #endregion
         #region PublicMethods
-        void SetFields(Beam beam)
+        void SetFields(Part part)
         {
+            Beam beam = part as Beam;
             string[] profileValues = GetProfileValues(beam);
             //RTWSV Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2
             _height = Convert.ToDouble(profileValues[0]);

@@ -10,42 +10,29 @@ namespace ZeroTouchTekla.Profiles
     public class DABT : Element
     {
         #region Constructor
-        public DABT(Beam part) : base(part)
+        public DABT(List<Part> parts) : base(parts)
         {
-            GetProfilePointsAndParameters(part);
-        }
-        public DABT(Beam part, Beam secondPart) : base(part)
-        {
-            GetProfilePointsAndParameters(part, secondPart);
-        }
-        public DABT(Beam part, Beam secondPart, Beam thirdPart) : base(part)
-        {
-            GetProfilePointsAndParameters(part, secondPart, thirdPart);
+            SetLocalPlane(parts[0]);
+            GetProfilePointsAndParameters(parts);
         }
         new public void Create()
         {
             OuterVerticalRebar();
             InnerVerticalRebar();
-            CantileverVerticalRebar(0);
-            CantileverVerticalRebar(1);
-            CantileverVerticalRebar(2);
-            BackwallTopVerticalRebar(0);
-            BackwallTopVerticalRebar(1);
-            BackwallTopVerticalRebar(2);
-            BackwallOuterVerticalRebar(0);
-            BackwallOuterVerticalRebar(1);
-            BackwallOuterVerticalRebar(2);
-            BackwallInnerVerticalRebar(0);
-            BackwallInnerVerticalRebar(1);
-            BackwallInnerVerticalRebar(2);
-            ShelfHorizontalRebar(0);
-            ShelfHorizontalRebar(1);
-            ShelfHorizontalRebar(2);
-            OuterLongitudinalRebar();
-            InnerLongitudinalRebar();
+            for(int i=0;i<ProfilePoints.Count-1;i++)
+            {
+                CantileverVerticalRebar(i);
+                BackwallTopVerticalRebar(i);
+                BackwallOuterVerticalRebar(i);
+                BackwallInnerVerticalRebar(i);
+                ShelfHorizontalRebar(i);
+               
+            }
             CantileverLongitudinalRebar(0);
             CantileverLongitudinalRebar(1);
             CantileverLongitudinalRebar(2);
+            OuterLongitudinalRebar();
+            InnerLongitudinalRebar();
             BackwallLongitudinalRebar(1);
             BackwallLongitudinalRebar(2);
             BackwallLongitudinalTopRebar();
@@ -68,8 +55,9 @@ namespace ZeroTouchTekla.Profiles
         }
         #endregion
         #region PrivateMethods  
-        public void FirstBeamProperties(Beam beam)
+        public void FirstBeamProperties(Part part)
         {
+            Beam beam = part as Beam;
             string[] profileValues = GetProfileValues(beam);
             Width = Convert.ToDouble(profileValues[0]);
             Height = Convert.ToDouble(profileValues[1]);
@@ -152,8 +140,9 @@ namespace ZeroTouchTekla.Profiles
             ProfilePoints.Add(firstProfile);
             ProfilePoints.Add(secondProfile);
         }
-        public void SecondBeamProperties(Beam secondBeam)
+        public void SecondBeamProperties(Part part)
         {
+            Beam secondBeam = part as Beam;
             string[] secondProfileValues = GetProfileValues(secondBeam);
             string secondProfileName = secondBeam.Profile.ProfileString;
             Length2 = Distance.PointToPoint(secondBeam.StartPoint, secondBeam.EndPoint);
@@ -198,8 +187,9 @@ namespace ZeroTouchTekla.Profiles
             ProfilePoints.Add(thirdProfile);
 
         }
-        public void ThirdBeamProperties(Beam thirdBeam)
+        public void ThirdBeamProperties(Part part)
         {
+            Beam thirdBeam = part as Beam;
             string[] thirdProfileValues = GetProfileValues(thirdBeam);
             string thirdProfileName = thirdBeam.Profile.ProfileString;
             Length3 = Distance.PointToPoint(thirdBeam.StartPoint, thirdBeam.EndPoint);
@@ -244,25 +234,24 @@ namespace ZeroTouchTekla.Profiles
             }
             ProfilePoints.Add(fourthProfile);
         }
-        public void GetProfilePointsAndParameters(Beam beam)
+        public void GetProfilePointsAndParameters(List<Part> parts)
         {
             //ABT Width*Height*FrontHeight*ShelfHeight*ShelfWidth*BackwallWidth*CantileverWidth*BackwallTopHeight*CantileverHeight*BackwallBottomHeight*SkewHeight
             //ABTV W*H*FH*SH*SW*BWW*CW*BWTH*CH*BWBH*SH*H*FH*BWTH*BWBH
             //ABTVSK W*H*FH*SH*SW*BWW*CW*BWTH*CH*BWBH*SH*H*FH*BWTH*BWBH*HO
 
-            FirstBeamProperties(beam);
+
+            FirstBeamProperties(parts[0]);
+            if (parts.Count > 1)
+            {
+                SecondBeamProperties(parts[1]);
+            }
+            if (parts.Count > 2)
+            {
+                ThirdBeamProperties(parts[2]);
+            }
+
             ElementFace = new ElementFace(ProfilePoints);
-        }
-        public void GetProfilePointsAndParameters(Beam beam, Beam secondBeam)
-        {
-            FirstBeamProperties(beam);
-            SecondBeamProperties(secondBeam);
-        }
-        public void GetProfilePointsAndParameters(Beam beam, Beam secondBeam, Beam thirdBeam)
-        {
-            FirstBeamProperties(beam);
-            SecondBeamProperties(secondBeam);
-            ThirdBeamProperties(thirdBeam);
         }
         #endregion
         #region PrivateMethods   
@@ -1151,7 +1140,7 @@ namespace ZeroTouchTekla.Profiles
                     rebarSet.LegFaces.Add(face);
                 }
 
-                Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][0], ProfilePoints[1][0]).GetNormal();
+                Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][8], ProfilePoints[1][8]).GetNormal();
                 GeometricPlane geometricPlane = new GeometricPlane(ProfilePoints[0][8], normal);
 
                 Line firstLine = new Line(ProfilePoints[0][8], ProfilePoints[1][8]);

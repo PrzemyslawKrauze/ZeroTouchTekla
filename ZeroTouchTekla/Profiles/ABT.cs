@@ -32,8 +32,9 @@ namespace ZeroTouchTekla.Profiles
          *             9---------------0
          *
          */
-        public ABT(Beam part) : base(part)
+        public ABT(List<Part> parts) : base(part)
         {
+            SetLocalPlane(parts[0]);
             GetProfilePointsAndParameters(part);
         }
         public void GetProfilePointsAndParameters(Beam beam)

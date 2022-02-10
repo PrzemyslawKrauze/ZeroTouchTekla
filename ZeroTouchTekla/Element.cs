@@ -12,9 +12,12 @@ namespace ZeroTouchTekla
 {
     public class Element
     {
-        public Element(Beam part)
+        public Element(Part part)
         {
             SetRebarCreatorProperties(part);
+        }
+        public Element(List<Part> parts)
+        {
         }
         public void Create()
         { }
@@ -25,14 +28,20 @@ namespace ZeroTouchTekla
         {
             return ProfilePoints;
         }
+        public void SetLocalPlane(Part part)
+        {
+            Model model = new Model();
+            TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
+            model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+        }
 
-        protected void SetRebarCreatorProperties(Beam beam)
+        protected void SetRebarCreatorProperties(Part beam)
         {
             beam.GetUserProperty("__CovThickSides", ref SideCover);
             beam.GetUserProperty("__CovThickBottom", ref BottomCover);
             beam.GetUserProperty("__CovThickTop ", ref TopCover);
         }
-        protected static string[] GetProfileValues(Beam beam)
+        protected static string[] GetProfileValues(Part beam)
         {
             Profile profile = beam.Profile;
             string profileName = profile.ProfileString;

@@ -13,14 +13,18 @@ namespace ZeroTouchTekla
     public class FTG : Element
     {
         #region Constructor
-        public FTG(Beam beam) : base(beam)
+        public FTG(Part part) : base(part)
         {
-            GetProfilePointsAndParameters(beam);
+            SetLocalPlane(part);
+            GetProfilePointsAndParameters(part);
         }
         #endregion
         #region PublicMathods
-        public void GetProfilePointsAndParameters(Beam beam)
+        public void GetProfilePointsAndParameters(Part part)
         {
+            Beam beam = part as Beam;
+            //Get beam local plane
+      
             string[] profileValues = GetProfileValues(beam);
             string profileName = beam.Profile.ProfileString;
             //FTG Width*FirstHeight*SecondHeight

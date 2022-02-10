@@ -14,14 +14,16 @@ namespace ZeroTouchTekla
     class CLMN : Element
     {
         #region Constructor
-        public CLMN(Beam beam) : base(beam)
+        public CLMN(Part part) : base(part)
         {
-            GetProfilePointsAndParameters(beam);
+            SetLocalPlane(part);
+            GetProfilePointsAndParameters(part);
         }
         #endregion
         #region PublicMethods
-        public void GetProfilePointsAndParameters(Beam beam)
+        public void GetProfilePointsAndParameters(Part part)
         {
+            Beam beam = part as Beam;
             string[] profileValues = GetProfileValues(beam);
             //FTG Width*FirstHeight*SecondHeight*AsymWidth
             double width = Convert.ToDouble(profileValues[0]);
