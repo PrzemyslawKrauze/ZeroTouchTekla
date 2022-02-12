@@ -11,7 +11,7 @@ namespace ZeroTouchTekla.Profiles
         #region Constructor
         public RTW(Part part) : base(part)
         {
-            TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
+            SetLocalPlane(part);
             SetFields(part);
             SetProfilePoints();
         }

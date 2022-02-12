@@ -90,7 +90,7 @@
   <ItemGroup>
     <Compile Include="Profiles\APS.cs" />
     <Compile Include="Profiles\CLMN.cs" />
-    <Compile Include="Profiles\DABT.cs" />
+    <Compile Include="Profiles\ABT.cs" />
     <Compile Include="Profiles\DRTW.cs" />
     <Compile Include="Element.cs" />
     <Compile Include="MainForm.cs">

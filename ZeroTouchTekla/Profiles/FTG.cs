@@ -57,7 +57,7 @@ namespace ZeroTouchTekla
                 AsymWidth = 0;
             }
 
-            if (profileName.Contains("SK"))
+            if (profileName.Contains("V"))
             {
                 if (AsymWidth == 0)
                 {
@@ -82,7 +82,7 @@ namespace ZeroTouchTekla
                 secondProfile.Add(secondPoint);
             }
 
-            if (profileName.Contains("SK"))
+            if (profileName.Contains("V"))
             {
                 foreach (Point p in firstProfile)
                 {
@@ -865,6 +865,9 @@ namespace ZeroTouchTekla
 
             Point bottomLeft, topLeft, bottomRight, topRight;
             Point endBottomLeft, endTopLeft, endBottomRight, endTopRight;
+            Vector normal;
+            Line bottomLine;
+            Line topLine;
             switch (faceNumber)
             {
                 case 1:
@@ -876,6 +879,9 @@ namespace ZeroTouchTekla
                     endTopLeft = ProfilePoints[1][1];
                     endBottomRight = ProfilePoints[1][4];
                     endTopRight = ProfilePoints[1][3];
+                    normal = Utility.GetVectorFromTwoPoints(bottomLeft, endBottomLeft).GetNormal();
+                    bottomLine = new Line(bottomLeft, endBottomLeft);
+                    topLine = new Line(topLeft, endTopLeft);
                     break;
                 case 2:
                     bottomLeft = ProfilePoints[1][0];
@@ -886,6 +892,9 @@ namespace ZeroTouchTekla
                     endTopLeft = ProfilePoints[1][3];
                     endBottomRight = ProfilePoints[0][4];
                     endTopRight = ProfilePoints[0][3];
+                    normal = Utility.GetVectorFromTwoPoints(bottomLeft, bottomRight).GetNormal();
+                    bottomLine = new Line(bottomLeft, bottomRight);
+                    topLine = new Line(topLeft, topRight);
                     break;
                 case 3:
                     bottomLeft = ProfilePoints[0][4];
@@ -896,6 +905,9 @@ namespace ZeroTouchTekla
                     endTopLeft = ProfilePoints[0][1];
                     endBottomRight = ProfilePoints[1][0];
                     endTopRight = ProfilePoints[1][1];
+                    normal = Utility.GetVectorFromTwoPoints(bottomLeft, bottomRight).GetNormal();
+                    bottomLine = new Line(bottomLeft, bottomRight);
+                    topLine = new Line(topLeft, topRight);
                     break;
                 default:
                     bottomLeft = ProfilePoints[1][0];
@@ -906,6 +918,9 @@ namespace ZeroTouchTekla
                     endTopLeft = ProfilePoints[0][1];
                     endBottomRight = ProfilePoints[0][4];
                     endTopRight = ProfilePoints[0][3];
+                    normal = Utility.GetVectorFromTwoPoints(bottomLeft, endBottomLeft).GetNormal();
+                    bottomLine = new Line(bottomLeft, endBottomLeft);
+                    topLine = new Line(topLeft, endTopLeft);
                     break;
             }
 
@@ -940,9 +955,14 @@ namespace ZeroTouchTekla
             });
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = Convert.ToDouble(spacing) / 2.0;
+            
+            GeometricPlane geometricPlane = new GeometricPlane(bottomLeft, normal);        
 
-            guideline.Curve.AddContourPoint(new ContourPoint(bottomLeft, null));
-            guideline.Curve.AddContourPoint(new ContourPoint(topLeft, null));
+            Point startGL = Utility.GetExtendedIntersection(bottomLine, geometricPlane, 2);
+            Point endGL = Utility.GetExtendedIntersection(topLine, geometricPlane, 2);
+
+            guideline.Curve.AddContourPoint(new ContourPoint(startGL, null));
+            guideline.Curve.AddContourPoint(new ContourPoint(endGL, null));
 
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();

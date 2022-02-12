@@ -55,11 +55,11 @@ namespace ZeroTouchTekla
                     clmn.Create();
                     break;
                 case ProfileType.ABT:
-                    DABT dabt = new DABT(PickParts());
+                    ABT dabt = new ABT(PickParts());
                     dabt.Create();
                     break;
                 case ProfileType.APS:
-                    APS aps = new APS(PickPart());
+                    APS aps = new APS(PickParts());
                     aps.Create();
                     break;
             }

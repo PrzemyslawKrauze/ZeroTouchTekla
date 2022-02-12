@@ -12,7 +12,7 @@ namespace ZeroTouchTekla.Profiles
     {
         public WING(Beam part) : base(part)
         {
-            _beam = part;
+            SetLocalPlane(part);
             GetProfilePointsAndParameters(part);
         }
         #region PublicMethods

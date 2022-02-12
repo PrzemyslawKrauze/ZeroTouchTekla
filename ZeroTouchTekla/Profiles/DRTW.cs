@@ -10,6 +10,7 @@ namespace ZeroTouchTekla.Profiles
         #region Constructor        
         public DRTW(List<Part> parts):base(parts)
         {
+            SetLocalPlane(parts[0]);
             GetProfilePointsAndParameters(parts);
         }
         #endregion
