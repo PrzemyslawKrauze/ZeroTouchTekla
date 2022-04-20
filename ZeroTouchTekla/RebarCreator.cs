@@ -31,47 +31,41 @@ namespace ZeroTouchTekla
 
             //Store current work plane
             TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+            Element element;
 
             switch (profileType)
             {
                 case ProfileType.FTG:
-                    FTG ftg = new FTG(PickPart());
-                    ftg.Create();
+                    element = new FTG(PickPart());
                     break;
                 case ProfileType.RTW:
-                    RTW rtw = new RTW(PickPart());
-                    rtw.Create();
+                    element = new RTW(PickPart());
                     break;
                 case ProfileType.DRTW:
-                    DRTW drtw = new DRTW(PickParts());
-                    drtw.Create();
+                    element = new DRTW(PickParts());
                     break;
                 case ProfileType.RTWS:
-                    RTWS rtws = new RTWS(PickPart());
-                    rtws.Create();
+                    element = new RTWS(PickPart());
                     break;
                 case ProfileType.CLMN:
-                    CLMN clmn = new CLMN(PickPart());
-                    clmn.Create();
+                    element = new CLMN(PickPart());
                     break;
                 case ProfileType.ABT:
-                    ABT dabt = new ABT(PickParts());
-                    dabt.Create();
+                    element = new ABT(PickParts());
                     break;
                 case ProfileType.APS:
-                    APS aps = new APS(PickParts());
-                    aps.Create();
+                    element = new APS(PickParts());
                     break;
+                default:
+                    throw new Exception("Profile type doesn't match");
             }
-
+            element.Create();
             //Restore user work plane
             model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
             model.CommitChanges();
 
-            ChangeLayer(model);
-            ChangeLayer(model);
-            LayerDictionary = new Dictionary<int, int[]>();
-
+            ChangeLayer(model,element);
+            ChangeLayer(model,element);
         }
         static Part PickPart()
         {
@@ -111,24 +105,22 @@ namespace ZeroTouchTekla
                     //Get beam local plane
                     TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
                     model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
-
+                    Element element;
                     switch (profileType)
                     {
                         case ProfileType.WING:
-                            WING wing = new WING(part);
-                            wing.Create();
+                            element = new WING(part);
                             break;
-
+                        default:
+                            throw new Exception("Profile type doesn't match");
                     }
-
+                    element.Create();
                     //Restore user work plane
                     model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
                     model.CommitChanges();
-                }
-
-                ChangeLayer(model);
-                ChangeLayer(model);
-                LayerDictionary = new Dictionary<int, int[]>();
+                    ChangeLayer(model, element);
+                    ChangeLayer(model, element);
+                }               
             }
             catch (System.ApplicationException)
             {
@@ -149,7 +141,7 @@ namespace ZeroTouchTekla
                 Beam beam = partPicker.PickObject(partPickObjectEnum) as Beam;
 
                 RebarSet rebarSet = rebarPicker.PickObject(rebarPickObjectEnum) as RebarSet;
-                rebarSet.GetUserProperty(RebarCreator.FatherIDName, ref FatherID);
+                rebarSet.GetUserProperty(RebarCreator.FATHER_ID_NAME, ref FatherID);
                 string rebarName = rebarSet.RebarProperties.Name;
 
                 string hostName = beam.Profile.ProfileString;
@@ -162,9 +154,9 @@ namespace ZeroTouchTekla
 
 
                     List<RebarSet> selectedRebars = (from RebarSet r in rebarList
-                                                     where Utility.GetUserProperty(r, FatherIDName) == beam.Identifier.ID
+                                                     where Utility.GetUserProperty(r, FATHER_ID_NAME) == beam.Identifier.ID
                                                      select r).ToList();
-
+                    Dictionary<int,int[]> currentLayerDictionary = new Dictionary<int,int[]>();
                     foreach (RebarSet rs in selectedRebars)
                     {
                         List<RebarLegFace> rebarLegFaces = rs.LegFaces;
@@ -173,7 +165,8 @@ namespace ZeroTouchTekla
                         {
                             layers[i] = rebarLegFaces[i].LayerOrderNumber;
                         }
-                        LayerDictionary.Add(rs.Identifier.ID, layers);
+
+                        currentLayerDictionary.Add(rs.Identifier.ID, layers);
                     }
 
                     List<RebarSet> barsToDelete = (from RebarSet rs in selectedRebars
@@ -193,29 +186,29 @@ namespace ZeroTouchTekla
                     TransformationPlane localPlane = new TransformationPlane(beam.GetCoordinateSystem());
                     model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
 
+                    Element element;
                     switch (profileType)
                     {
                         case ProfileType.FTG:
-                            FTG ftg = new FTG(beam);
-                            ftg.CreateSingle(rebarName);
+                            element = new FTG(beam);
                             break;
                         case ProfileType.RTW:
-                            RTW rtw = new RTW(beam);
-                            rtw.CreateSingle(rebarName);
+                           element= new RTW(beam);
                             break;
                         case ProfileType.CLMN:
-                            CLMN clmn = new CLMN(beam);
-                            clmn.CreateSingle(rebarName);
+                            element = new CLMN(beam);
                             break;
+                        default:
+                            throw new Exception("Profile type doesn't match");
                     }
 
+                    element.CreateSingle(rebarName);
                     //Restore user work plane
                     model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
                     model.CommitChanges();
 
-                    ChangeLayer(model);
-                    ChangeLayer(model);
-                    LayerDictionary = new Dictionary<int, int[]>();
+                    ChangeLayer(model,element);
+                    ChangeLayer(model,element);
                 }
             }
             catch (System.ApplicationException)
@@ -224,13 +217,13 @@ namespace ZeroTouchTekla
             }
 
         }
-        static void ChangeLayer(Model model)
+        static void ChangeLayer(Model model, Element element)
         {
             Type[] Types = new Type[] { typeof(RebarSet) };
             ModelObjectEnumerator Enum = model.GetModelObjectSelector().GetAllObjectsWithType(Types);
             var rebarList = Utility.ToList(Enum);
 
-            foreach (KeyValuePair<int, int[]> keyValuePair in LayerDictionary)
+            foreach (KeyValuePair<int, int[]> keyValuePair in element.LayerDictionary)
             {
                 RebarSet rs = (from RebarSet r in rebarList
                                where r.Identifier.ID == keyValuePair.Key
@@ -257,10 +250,9 @@ namespace ZeroTouchTekla
                     }
                 }
             }
-
         }
 
-        public static Dictionary<int, int[]> LayerDictionary = new Dictionary<int, int[]>();
+       
         public enum ProfileType
         {
             None,
@@ -297,9 +289,9 @@ namespace ZeroTouchTekla
             }
             return ProfileType.None;
         }
-        public static string FatherIDName = "ZTB_FatherIDName";
-        public static string MethodName = "ZTB_MethodName";
-        public static string MethodInput = "ZTB_MethodInput";
+        public const string FATHER_ID_NAME = "ZTB_FatherIDName";
+        public const string METHOD_NAME = "ZTB_MethodName";
+        public const string MethodInput = "ZTB_MethodInput";
         public static int MinLengthCoefficient = 20;
     }
 }

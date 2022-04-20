@@ -24,7 +24,7 @@ namespace ZeroTouchTekla
             string path = ExcelUtility.BrowserPath();
             if (ExcelUtility.isValidExcelPath(path))
             {
-                Program.excelPath = path;
+                Program.ExcelPath = path;
                 ExcelNameLabel.Text = Path.GetFileName(path);
                 ExcelUtility excelUtility = new ExcelUtility(path);
                 List<string> sheetNames = excelUtility.SheetList();
@@ -36,17 +36,17 @@ namespace ZeroTouchTekla
 
         private void OnSelectedSheetChanged(object sender, EventArgs e)
         {
-            Program.sheetName = SheetComboBox.SelectedItem.ToString();
+            Program.SheetName = SheetComboBox.SelectedItem.ToString();
         }
 
         private void OnLoadButtonClick(object sender, EventArgs e)
         {
 
-            if (ExcelUtility.isValidExcelPath(Program.excelPath))
+            if (ExcelUtility.isValidExcelPath(Program.ExcelPath))
             {
-                ExcelUtility excelUtility = new ExcelUtility(Program.excelPath);
+                ExcelUtility excelUtility = new ExcelUtility(Program.ExcelPath);
 
-                Program.ExcelDictionary = excelUtility.ReadExcelAndCreateDictionary(3, 4, Program.sheetName);
+                Program.ExcelDictionary = excelUtility.ReadExcelAndCreateDictionary(3, 4, Program.SheetName);
                 excelUtility.SaveAndDispose();
                 /*
                 catch

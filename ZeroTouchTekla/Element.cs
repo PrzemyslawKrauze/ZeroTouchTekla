@@ -10,61 +10,20 @@ using Tekla.Structures.Geometry3d;
 
 namespace ZeroTouchTekla
 {
-    public class Element
+    public static class TeklaUtils
     {
-        public Element(Part part)
+        public static RebarSet CreateDefaultRebarSet(string name, int rebarSize)
         {
-            SetRebarCreatorProperties(part);
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = name;
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(rebarSize);
+            rebarSet.RebarProperties.Size = rebarSize.ToString();
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(rebarSize);
+            rebarSet.LayerOrderNumber = 1;
+            return rebarSet;
         }
-        public Element(List<Part> parts)
-        {
-        }
-        public void Create()
-        { }
-        public void CreateSingle(string barName)
-        { }
-
-        public List<List<Point>> GetProfilePoints()
-        {
-            return ProfilePoints;
-        }
-        public void SetLocalPlane(Part part)
-        {
-            Model model = new Model();
-            TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
-            model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
-        }
-
-        protected void SetRebarCreatorProperties(Part beam)
-        {
-            beam.GetUserProperty("__CovThickSides", ref SideCover);
-            beam.GetUserProperty("__CovThickBottom", ref BottomCover);
-            beam.GetUserProperty("__CovThickTop ", ref TopCover);
-        }
-        protected static string[] GetProfileValues(Part beam)
-        {
-            Profile profile = beam.Profile;
-            string profileName = profile.ProfileString;
-            profileName = Regex.Replace(profileName, "[A-Za-z ]", "");
-            string[] profileValues = profileName.Split('*');
-            return profileValues;
-        }
-        protected static double GetBendingRadious(double diameter)
-        {
-            if (diameter > 16)
-            {
-                return 7 * diameter;
-            }
-            else
-            {
-                return 4 * diameter;
-            }
-        }
-        protected static double GetHookLength(double diameter)
-        {
-            return 10 * diameter;
-        }
-        protected static int SetClass(double diameter)
+        public static int SetClass(double diameter)
         {
             switch (diameter)
             {
@@ -86,10 +45,61 @@ namespace ZeroTouchTekla
                     return 8;
             }
         }
+        public static double GetBendingRadious(double diameter)
+        {
+            if (diameter > 16)
+            {
+                return 7 * diameter;
+            }
+            else
+            {
+                return 4 * diameter;
+            }
+        }
+    }
+    public abstract class Element
+    {
+        public Element(Part part)
+        {
+            SetRebarCreatorProperties(part);
+        }
+        public Element(List<Part> parts)
+        {
+        }
+        //Abstract methods
+        public abstract void Create();
+        public abstract void CreateSingle(string barName);
+        //Public methods
+        public void SetLocalPlane()
+        {
+            Model model = new Model();
+            TransformationPlane localPlane = new TransformationPlane(BasePart.GetCoordinateSystem());
+            model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+        }
+       
+        protected void SetRebarCreatorProperties(Part beam)
+        {
+            beam.GetUserProperty("__CovThickSides", ref SideCover);
+            beam.GetUserProperty("__CovThickBottom", ref BottomCover);
+            beam.GetUserProperty("__CovThickTop ", ref TopCover);
+        }
+        protected static string[] GetProfileValues(Part beam)
+        {
+            Profile profile = beam.Profile;
+            string profileName = profile.ProfileString;
+            profileName = Regex.Replace(profileName, "[A-Za-z ]", "");
+            string[] profileValues = profileName.Split('*');
+            return profileValues;
+        }
+       
+        protected static double GetHookLength(double diameter)
+        {
+            return 10 * diameter;
+        }        
         protected void PostRebarCreationMethod(RebarSet rebarSet, System.Reflection.MethodBase methodBase)
         {
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
-            rebarSet.SetUserProperty(RebarCreator.MethodName, methodBase.Name);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.METHOD_NAME, methodBase.Name);
             string diameter = rebarSet.RebarProperties.Size;
             rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
             rebarSet.SetUserProperty("__MIN_BAR_LENGTH", RebarCreator.MinLengthCoefficient * Convert.ToDouble(diameter));
@@ -97,20 +107,27 @@ namespace ZeroTouchTekla
         }
         protected void PostRebarCreationMethod(RebarSet rebarSet, System.Reflection.MethodBase methodBase, int input)
         {
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
-            rebarSet.SetUserProperty(RebarCreator.MethodName, methodBase.Name);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.METHOD_NAME, methodBase.Name);
             rebarSet.SetUserProperty(RebarCreator.MethodInput, input);
             string diameter = rebarSet.RebarProperties.Size;
             rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
             rebarSet.SetUserProperty("__MIN_BAR_LENGTH", RebarCreator.MinLengthCoefficient * Convert.ToDouble(diameter));
         }
 
-        protected List<List<Point>> ProfilePoints = new List<List<Point>>();
+        private List<List<Point>> profilePoints = new List<List<Point>>();
         protected Dictionary<string, double> ProfileParameters = new Dictionary<string, double>();
+        private  Dictionary<int, int[]> layerDictionary = new Dictionary<int, int[]>();
+        private Part basePart;
         public double SideCover = 0;
         public double BottomCover = 0;
         public double TopCover = 0;
         public ElementFace ElementFace;
+
+       
+        public  Dictionary<int, int[]> LayerDictionary { get => layerDictionary; }
+        protected Part BasePart { get => basePart; set => basePart = value; }
+        public List<List<Point>> ProfilePoints { get => profilePoints; set => profilePoints = value; }
     }
     public class ElementFace
     {

@@ -12,7 +12,7 @@ namespace ZeroTouchTekla.Profiles
     {
         public WING(Beam part) : base(part)
         {
-            SetLocalPlane(part);
+            SetLocalPlane();
             GetProfilePointsAndParameters(part);
         }
         #region PublicMethods
@@ -40,7 +40,7 @@ namespace ZeroTouchTekla.Profiles
             _cd = (double)hashtable["CD"];
             _ctbh = (double)hashtable["CtBH"];
         }
-        new public void Create()
+        public override void Create()
         {
             Model model = new Model();
             string componentName = _beam.GetFatherComponent().Name;
@@ -63,7 +63,7 @@ namespace ZeroTouchTekla.Profiles
             var rebarList = Utility.ToList(moe);
 
             List<RebarSet> selectedRebars = (from RebarSet r in rebarList
-                                             where Utility.GetUserProperty(r, RebarCreator.FatherIDName) == _beam.Identifier.ID
+                                             where Utility.GetUserProperty(r, RebarCreator.FATHER_ID_NAME) == _beam.Identifier.ID
                                              select r).ToList();
 
             if (_profileType == ProfileType.RTW)
@@ -97,13 +97,17 @@ namespace ZeroTouchTekla.Profiles
                 EditRTWSRebar(rtws, selectedRebars);
             }
         }
+        public override void CreateSingle(string barName)
+        {
+            throw new NotImplementedException();
+        }       
         #region RTWMethods
         void EditRTWRebar(RTW rtw, List<RebarSet> rebarSets)
         {
             foreach (RebarSet rs in rebarSets)
             {
                 string methodName = string.Empty;
-                rs.GetUserProperty(RebarCreator.MethodName, ref methodName);
+                rs.GetUserProperty(RebarCreator.METHOD_NAME, ref methodName);
                 switch (methodName)
                 {
                     case "InnerVerticalRebar":
@@ -148,7 +152,7 @@ namespace ZeroTouchTekla.Profiles
             double correctedHeight2 = rtw.Height - (rtw.Height - rtw.Height2) * (rtw.Length - CD) / rtw.Length;
             double s = (rtw.BottomWidth - (rtw.TopWidth - rtw.CorniceWidth)) / rtw.Height;
 
-            List<List<Point>> profilePoints = rtw.GetProfilePoints();
+            List<List<Point>> profilePoints = rtw.ProfilePoints;
             List<List<Point>> correctedPoints = new List<List<Point>>();
 
             Point p00 = profilePoints[0][0];
@@ -205,7 +209,7 @@ namespace ZeroTouchTekla.Profiles
             double s = (rtw.BottomWidth - (rtw.TopWidth - rtw.CorniceWidth)) / rtw.Height;
             double secondBottomWidth = rtw.TopWidth - rtw.CorniceWidth + rtw.Height2 * s;
 
-            List<List<Point>> profilePoints = rtw.GetProfilePoints();
+            List<List<Point>> profilePoints = rtw.ProfilePoints;
             List<List<Point>> correctedPoints = new List<List<Point>>();
 
             Point p00 = profilePoints[1][0];
@@ -416,7 +420,7 @@ namespace ZeroTouchTekla.Profiles
 
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();
-            RebarCreator.LayerDictionary[rebarSet.Identifier.ID] = new int[] { 2, 2, 2, 2 };
+            LayerDictionary[rebarSet.Identifier.ID] = new int[] { 2, 2, 2, 2 };
         }
         void RTWEditInnerLongitudinalRebar(RTW rtw, RebarSet rebarSet)
         {
@@ -547,7 +551,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();
 
-            RebarCreator.LayerDictionary[rebarSet.Identifier.ID] = new int[] { 1, 1, 1, 2, 2 };
+            LayerDictionary[rebarSet.Identifier.ID] = new int[] { 1, 1, 1, 2, 2 };
         }
         void RTWEditClosingLongitudinalRebar(RTW rtw, RebarSet rebarSet, int number)
         {
@@ -588,7 +592,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();
 
-            RebarCreator.LayerDictionary[rebarSet.Identifier.ID] = new int[] { 2, 2 };
+            LayerDictionary[rebarSet.Identifier.ID] = new int[] { 2, 2 };
         }
         void RTWClosingLongitudinalRebarBottom(int number)
         {
@@ -601,9 +605,9 @@ namespace ZeroTouchTekla.Profiles
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "RTW_CLR_" + "B";
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point leftBottom, rightBottom, rightTop, leftTop;
@@ -649,7 +653,7 @@ namespace ZeroTouchTekla.Profiles
             new Model().CommitChanges();
 
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod(), number);
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void RTWEditCShapeRebar(RTW rtw, RebarSet rebarSet)
         {
@@ -706,7 +710,7 @@ namespace ZeroTouchTekla.Profiles
             foreach (RebarSet rs in rebarSets)
             {
                 string methodName = string.Empty;
-                rs.GetUserProperty(RebarCreator.MethodName, ref methodName);
+                rs.GetUserProperty(RebarCreator.METHOD_NAME, ref methodName);
                 switch (methodName)
                 {
                     
@@ -775,7 +779,7 @@ namespace ZeroTouchTekla.Profiles
             double correctedHeight1 = rtws.Height - (rtws.Height - rtws.Height2) * (SCD) / rtws.Length;
             double correctedHeight2 = rtws.Height - (rtws.Height - rtws.Height2) * (rtws.Length - CD) / rtws.Length;
 
-            List<List<Point>> profilePoints = rtws.GetProfilePoints();
+            List<List<Point>> profilePoints = rtws.ProfilePoints;
             List<List<Point>> correctedPoints = new List<List<Point>>();
 
             Point p00 = profilePoints[0][0];
@@ -840,7 +844,7 @@ namespace ZeroTouchTekla.Profiles
             double s = (rtws.BottomWidth - (rtws.TopWidth - rtws.CorniceWidth)) / rtws.Height;
             double secondBottomWidth = rtws.TopWidth - rtws.CorniceWidth + rtws.Height2 * s;
 
-            List<List<Point>> profilePoints = rtws.GetProfilePoints();
+            List<List<Point>> profilePoints = rtws.ProfilePoints;
             List<List<Point>> correctedPoints = new List<List<Point>>();
 
             Point p00 = profilePoints[1][0];
@@ -1275,7 +1279,7 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();
 
-            RebarCreator.LayerDictionary[rebarSet.Identifier.ID] = new int[] { 1, 1, 2, 2 };
+            LayerDictionary[rebarSet.Identifier.ID] = new int[] { 1, 1, 2, 2 };
         }
         void RTWSEditClosingLongitudinalRebar(RTWS rtws,RebarSet rebarSet,int number)
         {
