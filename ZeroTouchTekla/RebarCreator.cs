@@ -25,41 +25,14 @@ namespace ZeroTouchTekla
             ModelObjectEnumerator modelObject = picker.PickObjects(pickObjectEnum);
 
         }
-        public static void CreateForPart(ProfileType profileType)
+        public static void CreateForPart(Element.ProfileType profileType)
         {
             Model model = new Model();
 
             //Store current work plane
             TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
-            Element element;
+            Element element = Element.Create();
 
-            switch (profileType)
-            {
-                case ProfileType.FTG:
-                    element = new FTG(PickPart());
-                    break;
-                case ProfileType.RTW:
-                    element = new RTW(PickPart());
-                    break;
-                case ProfileType.DRTW:
-                    element = new DRTW(PickParts());
-                    break;
-                case ProfileType.RTWS:
-                    element = new RTWS(PickPart());
-                    break;
-                case ProfileType.CLMN:
-                    element = new CLMN(PickPart());
-                    break;
-                case ProfileType.ABT:
-                    element = new ABT(PickParts());
-                    break;
-                case ProfileType.APS:
-                    element = new APS(PickParts());
-                    break;
-                default:
-                    throw new Exception("Profile type doesn't match");
-            }
-            element.Create();
             //Restore user work plane
             model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
             model.CommitChanges();
@@ -87,7 +60,7 @@ namespace ZeroTouchTekla
             }
             return beamList;
         }
-        public static void CreateForComponent(ProfileType profileType)
+        public static void CreateForComponent(Element.ProfileType profileType)
         {
             Model model = new Model();
             ModelInfo info = model.GetInfo();
@@ -108,7 +81,7 @@ namespace ZeroTouchTekla
                     Element element;
                     switch (profileType)
                     {
-                        case ProfileType.WING:
+                        case Element.ProfileType.WING:
                             element = new WING(part);
                             break;
                         default:
@@ -145,8 +118,8 @@ namespace ZeroTouchTekla
                 string rebarName = rebarSet.RebarProperties.Name;
 
                 string hostName = beam.Profile.ProfileString;
-                ProfileType profileType = GetProfileType(hostName);
-                if (profileType != ProfileType.None)
+                Element.ProfileType profileType = Element.GetProfileType(hostName);
+                if (profileType != Element.ProfileType.None)
                 {
                     Type[] Types = new Type[] { typeof(RebarSet) };
                     ModelObjectEnumerator moe = model.GetModelObjectSelector().GetAllObjectsWithType(Types);
@@ -189,13 +162,13 @@ namespace ZeroTouchTekla
                     Element element;
                     switch (profileType)
                     {
-                        case ProfileType.FTG:
+                        case Element.ProfileType.FTG:
                             element = new FTG(beam);
                             break;
-                        case ProfileType.RTW:
+                        case Element.ProfileType.RTW:
                            element= new RTW(beam);
                             break;
-                        case ProfileType.CLMN:
+                        case Element.ProfileType.CLMN:
                             element = new CLMN(beam);
                             break;
                         default:
@@ -253,42 +226,9 @@ namespace ZeroTouchTekla
         }
 
        
-        public enum ProfileType
-        {
-            None,
-            FTG,
-            RTW,
-            DRTW,
-            RTWS,
-            CLMN,
-            ABT,
-            TABT,
-            WING,
-            APS
-        }
+       
         public static int FatherID;
-        static ProfileType GetProfileType(string profileString)
-        {
-            if (profileString.Contains("FTG"))
-            {
-                return ProfileType.FTG;
-            }
-            else
-            {
-                if (profileString.Contains("RTW"))
-                {
-                    return ProfileType.RTW;
-                }
-                else
-                {
-                    if (profileString.Contains("CLMN"))
-                    {
-                        return ProfileType.CLMN;
-                    }
-                }
-            }
-            return ProfileType.None;
-        }
+        
         public const string FATHER_ID_NAME = "ZTB_FatherIDName";
         public const string METHOD_NAME = "ZTB_MethodName";
         public const string MethodInput = "ZTB_MethodInput";

@@ -29,12 +29,18 @@ namespace ZeroTouchTekla.Profiles
         double _height2;
         #endregion
         #region Constructors
-        public RTW(Part part) : base(part)
+        public RTW(params Part[] parts)
         {
-            base.BasePart = part;
-            SetLocalPlane();
-            SetFields();
-            SetProfilePoints();
+            if (parts.Length > 1)
+            {
+                throw new ArgumentException("Multiple parts not supported");
+            }
+            else
+            {
+                SetLocalPlane();
+                SetFields();
+                SetProfilePoints();
+            }
         }
         #endregion
         #region Properties

@@ -14,10 +14,10 @@ namespace ZeroTouchTekla
     class CLMN : Element
     {
         #region Constructor
-        public CLMN(Part part) : base(part)
+        public CLMN(params Part[] parts) : base()
         {
             SetLocalPlane();
-            GetProfilePointsAndParameters(part);
+            GetProfilePointsAndParameters(parts[0]);
         }
         #endregion
         #region PublicMethods

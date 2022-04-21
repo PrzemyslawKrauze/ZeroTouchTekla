@@ -10,10 +10,11 @@ namespace ZeroTouchTekla.Profiles
     public class ABT : Element
     {
         #region Constructor
-        public ABT(List<Part> parts) : base(parts)
+        public ABT(params Part[] parts) : base()
         {
+            List<Part> partList = new List<Part>(parts);
             SetLocalPlane();
-            GetProfilePointsAndParameters(parts);
+            GetProfilePointsAndParameters(partList);
         }
         public override void Create()
         {

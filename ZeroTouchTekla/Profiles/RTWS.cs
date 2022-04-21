@@ -10,9 +10,9 @@ namespace ZeroTouchTekla.Profiles
     public class RTWS : Element
     {
         #region Constructor
-        public RTWS(Part part) : base(part)
+        public RTWS(params Part[] parts) : base()
         {
-            SetFields(part);
+            SetFields(parts[0]);
             SetProfilePoints();
         }
         #endregion

@@ -8,15 +8,22 @@ using Tekla.Structures;
 using Tekla.Structures.Model;
 using Tekla.Structures.Geometry3d;
 
-namespace ZeroTouchTekla
+namespace ZeroTouchTekla.Profiles
 {
     public class FTG : Element
     {
         #region Constructor
-        public FTG(Part part) : base(part)
+        public FTG(params Part[] parts) 
         {
-            SetLocalPlane();
-            GetProfilePointsAndParameters(part);
+            if (parts.Count() > 1)
+            {
+                throw new ArgumentException("Multiple parts not supported");
+            }
+            else
+            {
+                SetLocalPlane();
+                GetProfilePointsAndParameters(parts[0]);
+            }
         }
         #endregion
         #region PublicMathods

@@ -9,10 +9,11 @@ namespace ZeroTouchTekla
 {
     public class APS : Element
     {
-        public APS(List<Part> parts) : base(parts)
+        public APS(params Part[] parts) : base()
         {
+            List<Part> partList = new List<Part>(parts);
             SetLocalPlane();
-            GetProfilePointsAndParameters(parts);
+            GetProfilePointsAndParameters(partList);
         }
         public void GetProfilePointsAndParameters(List<Part> parts)
         {

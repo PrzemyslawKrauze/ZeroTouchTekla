@@ -8,10 +8,11 @@ namespace ZeroTouchTekla.Profiles
     public class DRTW : Element
     {
         #region Constructor        
-        public DRTW(List<Part> parts):base(parts)
+        public DRTW(params Part[] parts)
         {
+            List<Part> partList = new List<Part>(parts);
             SetLocalPlane();
-            GetProfilePointsAndParameters(parts);
+            GetProfilePointsAndParameters(partList);
         }
         #endregion
         #region PublicMethods
