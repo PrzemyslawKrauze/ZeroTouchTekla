@@ -18,8 +18,12 @@ namespace ZeroTouchTekla
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
         }
-        public static string excelPath = "";
-        public static string sheetName = "";
-        public static Dictionary<string, string> ExcelDictionary = new Dictionary<string, string>();
+        private static string _excelPath = String.Empty;
+        private static string _sheetName = String.Empty;
+        private static Dictionary<string, string> _excelDictionary = new Dictionary<string, string>();
+
+        public static string ExcelPath { get => _excelPath; set => _excelPath = value; }
+        public static string SheetName { get => _sheetName; set => _sheetName = value; }
+        public static Dictionary<string, string> ExcelDictionary { get => _excelDictionary; set => _excelDictionary = value; }
     }
 }

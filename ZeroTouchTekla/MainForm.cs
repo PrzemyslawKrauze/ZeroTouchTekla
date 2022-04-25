@@ -24,7 +24,7 @@ namespace ZeroTouchTekla
             string path = ExcelUtility.BrowserPath();
             if (ExcelUtility.isValidExcelPath(path))
             {
-                Program.excelPath = path;
+                Program.ExcelPath = path;
                 ExcelNameLabel.Text = Path.GetFileName(path);
                 ExcelUtility excelUtility = new ExcelUtility(path);
                 List<string> sheetNames = excelUtility.SheetList();
@@ -36,17 +36,17 @@ namespace ZeroTouchTekla
 
         private void OnSelectedSheetChanged(object sender, EventArgs e)
         {
-            Program.sheetName = SheetComboBox.SelectedItem.ToString();
+            Program.SheetName = SheetComboBox.SelectedItem.ToString();
         }
 
         private void OnLoadButtonClick(object sender, EventArgs e)
         {
 
-            if (ExcelUtility.isValidExcelPath(Program.excelPath))
+            if (ExcelUtility.isValidExcelPath(Program.ExcelPath))
             {
-                ExcelUtility excelUtility = new ExcelUtility(Program.excelPath);
+                ExcelUtility excelUtility = new ExcelUtility(Program.ExcelPath);
 
-                Program.ExcelDictionary = excelUtility.ReadExcelAndCreateDictionary(3, 4, Program.sheetName);
+                Program.ExcelDictionary = excelUtility.ReadExcelAndCreateDictionary(3, 4, Program.SheetName);
                 excelUtility.SaveAndDispose();
                 /*
                 catch
@@ -65,7 +65,7 @@ namespace ZeroTouchTekla
 
         private void OnFootingRebarClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.FTG);
+            RebarCreator.CreateForPart(Element.ProfileType.FTG);
         }
 
         private void OnCopySpacingClick(object sender, EventArgs e)
@@ -80,7 +80,7 @@ namespace ZeroTouchTekla
 
         private void OnRTWButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.RTW);
+            RebarCreator.CreateForPart(Element.ProfileType.RTW);
         }
 
         private void OnTestButtonClick(object sender, EventArgs e)
@@ -91,37 +91,37 @@ namespace ZeroTouchTekla
 
         private void OnCollumnButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.CLMN);
+            RebarCreator.CreateForPart(Element.ProfileType.CLMN);
         }
 
         private void OnDoubleRTWButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.DRTW);
+            RebarCreator.CreateForPart(Element.ProfileType.DRTW);
         }
 
         private void OnRetainingWallStepButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.RTWS);
+            RebarCreator.CreateForPart(Element.ProfileType.RTWS);
         }
 
         private void OnAbutmentButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.ABT);
+            RebarCreator.CreateForPart(Element.ProfileType.ABT);
         }
 
         private void OnWingButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForComponent(RebarCreator.ProfileType.WING);
+            RebarCreator.CreateForComponent(Element.ProfileType.WING);
         }
 
         private void OnTripledAbutmentButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.TABT);
+            RebarCreator.CreateForPart(Element.ProfileType.TABT);
         }
 
         private void OnAPSButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(RebarCreator.ProfileType.APS);
+            RebarCreator.CreateForPart(Element.ProfileType.APS);
         }
     }
 }

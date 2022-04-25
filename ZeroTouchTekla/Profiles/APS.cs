@@ -9,10 +9,11 @@ namespace ZeroTouchTekla
 {
     public class APS : Element
     {
-        public APS(List<Part> parts) : base(parts)
+        public APS(params Part[] parts) : base()
         {
-            SetLocalPlane(parts[0]);
-            GetProfilePointsAndParameters(parts);
+            List<Part> partList = new List<Part>(parts);
+            SetLocalPlane();
+            GetProfilePointsAndParameters(partList);
         }
         public void GetProfilePointsAndParameters(List<Part> parts)
         {
@@ -24,7 +25,7 @@ namespace ZeroTouchTekla
                 NextBeamProperties(parts[i]);
             }
         }
-        new public void Create()
+        public override void Create()
         {
             LongitudinalRebar(0);
             LongitudinalRebar(1);
@@ -47,6 +48,10 @@ namespace ZeroTouchTekla
             ClosingRebar(0, true);
             ClosingRebar(ProfilePoints.Count - 2, false);
 
+        }
+        public override void CreateSingle(string barName)
+        {
+            throw new NotImplementedException();
         }
         #region PrivateMethods
         void FirstBeamProperties(Part part)
@@ -169,9 +174,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_LR_";
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             int f, s;
@@ -236,13 +241,13 @@ namespace ZeroTouchTekla
             }
 
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 2;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void LongitudlSkewRebar()
         {
@@ -252,9 +257,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_LR_";
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             int f, s;
@@ -301,13 +306,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 2;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void LongitudinalRebar(int faceNumber)
         {
@@ -317,9 +322,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_LR_" + faceNumber;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             int f, s;
@@ -390,13 +395,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 2;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void PerpendicularRebar(int number, bool isFirst)
         {
@@ -411,9 +416,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_LR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point sp0 = ProfilePoints[number][0];
@@ -503,13 +508,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 1;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void TopPerpendicularRebar(int number)
         {
@@ -520,9 +525,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_TPR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point sp0 = ProfilePoints[number][0];
@@ -571,13 +576,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 1;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void BottomPerpendicularRebar(int number)
         {
@@ -588,9 +593,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_LR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point sp0 = ProfilePoints[number][0];
@@ -624,13 +629,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 1;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void CantileverRebar(int number)
         {
@@ -641,9 +646,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_CR";
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point sp0 = ProfilePoints[number][0];
@@ -728,13 +733,13 @@ namespace ZeroTouchTekla
 
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 1;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void CShapeRebarCore(int number)
         {
@@ -763,9 +768,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_CSR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point sp0 = ProfilePoints[number][0];
@@ -829,13 +834,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 1;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void ClosingBackRebar(int number)
         {
@@ -847,9 +852,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_ClR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             Point sp0 = ProfilePoints[number][0];
@@ -908,13 +913,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 1;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         void ClosingRebar(int number, bool isStart)
         {
@@ -926,9 +931,9 @@ namespace ZeroTouchTekla
             var rebarSet = new RebarSet();
             rebarSet.RebarProperties.Name = "APS_ClR_" + number;
             rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
             int firstNumber = isStart ? number : number + 1;
@@ -1005,13 +1010,13 @@ namespace ZeroTouchTekla
             rebarSet.Guidelines.Add(guideline);
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
-            rebarSet.SetUserProperty(RebarCreator.FatherIDName, RebarCreator.FatherID);
+            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
             int[] faceLayer = new int[rebarSet.LegFaces.Count];
             for (int i = 0; i < faceLayer.Length; i++)
             {
                 faceLayer[i] = 2;
             }
-            RebarCreator.LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+           LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
         }
         #endregion
         #region Fields

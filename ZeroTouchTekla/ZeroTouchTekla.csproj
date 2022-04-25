@@ -37,7 +37,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="MyExcel">
-      <HintPath>..\..\Excel\Excel\bin\Debug\MyExcel.dll</HintPath>
+      <HintPath>..\..\MyExcel\Excel\bin\Debug\MyExcel.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
