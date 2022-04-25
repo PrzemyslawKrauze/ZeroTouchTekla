@@ -136,14 +136,15 @@ namespace ZeroTouchTekla.Profiles
             int addSplitter = Convert.ToInt32(Program.ExcelDictionary["OVR_AddSplitter"]);
             string secondRebarSize = Program.ExcelDictionary["OVR_SecondDiameter"];
             double spliterOffset = Convert.ToDouble(Program.ExcelDictionary["OVR_SplitterOffset"]) + Convert.ToDouble(rebarSize) * 20;
-            var rebarSet = new RebarSet();
+            var rebarSet = InitializeRebarSet("RTW_OVR",rebarSize);
+            /*
             rebarSet.RebarProperties.Name = "RTW_OVR";
             rebarSet.RebarProperties.Grade = "B500SP";
             rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
             rebarSet.RebarProperties.Size = rebarSize;
             rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
-
+            */
             Point startp3bis = new Point(ProfilePoints[0][1].X, ProfilePoints[0][1].Y + CorniceHeight, ProfilePoints[0][1].Z);
             Point endp3bis = new Point(ProfilePoints[1][1].X, ProfilePoints[1][1].Y + CorniceHeight, ProfilePoints[1][1].Z);
 

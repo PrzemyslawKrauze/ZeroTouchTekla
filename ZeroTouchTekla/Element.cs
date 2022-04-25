@@ -41,6 +41,18 @@ namespace ZeroTouchTekla
             beam.GetUserProperty("__CovThickBottom", ref BottomCover);
             beam.GetUserProperty("__CovThickTop ", ref TopCover);
         }
+
+        protected static RebarSet InitializeRebarSet(string rebarSetName,string rebarSize)
+        {
+            RebarSet rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = rebarSetName;
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 1;
+            return rebarSet;
+        }
         protected static string[] GetProfileValues(Part beam)
         {
             Profile profile = beam.Profile;

@@ -20,10 +20,9 @@ namespace ZeroTouchTekla
             ModelInfo info = model.GetInfo();
 
             // Creates the filter expressions
-            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectsEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS;
-            ModelObjectEnumerator modelObject = picker.PickObjects(pickObjectEnum);
-
+            IEnumerable<ModelObject.ModelObjectEnum> modelObjectEnums = new[] { ModelObject.ModelObjectEnum.BEAM,ModelObject.ModelObjectEnum.CONTOURPLATE };
+           Tekla.Structures.Model.History.ModificationInfo modificationInfo=  Tekla.Structures.Model.History.ModelHistory.TakeModifications("test", modelObjectEnums, null);
+            int a = 1;
         }
         public static void CreateForPart(ProfileType profileType)
         {
