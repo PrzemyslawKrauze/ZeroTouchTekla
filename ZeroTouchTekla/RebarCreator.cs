@@ -10,54 +10,47 @@ using Tekla.Structures.Model.Operations;
 using ZeroTouchTekla.Profiles;
 
 
+
 namespace ZeroTouchTekla
 {
     class RebarCreator
     {
         public static void Test()
         {
-            Model model = new Model();
-            ModelInfo info = model.GetInfo();
+            ModelInfo info =  Program.ActiveModel.GetInfo();
 
             // Creates the filter expressions
             IEnumerable<ModelObject.ModelObjectEnum> modelObjectEnums = new[] { ModelObject.ModelObjectEnum.BEAM,ModelObject.ModelObjectEnum.CONTOURPLATE };
            Tekla.Structures.Model.History.ModificationInfo modificationInfo=  Tekla.Structures.Model.History.ModelHistory.TakeModifications("test", modelObjectEnums, null);
-            int a = 1;
+           
         }
         public static void CreateForPart(Element.ProfileType profileType)
         {
-            Model model = new Model();
-
             //Store current work plane
-            TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
-            Element element = Element.Create();
+            TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+            Part[] pickedParts = PickParts();
+            Element element = Element.Create(pickedParts);
 
             //Restore user work plane
-            model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
-            model.CommitChanges();
+            Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+            Program.ActiveModel.CommitChanges();
 
-            ChangeLayer(model,element);
-            ChangeLayer(model,element);
+            ChangeLayer(Program.ActiveModel, element);
+            ChangeLayer(Program.ActiveModel, element);
         }
-        static Part PickPart()
+        static Part[] PickParts()
         {
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
-            Part modelObject = picker.PickObject(pickObjectEnum) as Part;
-            return modelObject;
-        }
-        static List<Part> PickParts()
-        {
-            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectsEnum pickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS;
-            ModelObjectEnumerator modelObjects = picker.PickObjects(pickObjectEnum);
-            List<ModelObject> modelObjectList = Utility.ToList(modelObjects);
-            List<Part> beamList = new List<Part>();
-            foreach (ModelObject mo in modelObjectList)
+            ModelObjectEnumerator modelObjects = picker.PickObjects(Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS, "Pick parts");
+           
+            Part[] parts = new Part[modelObjects.GetSize()];
+
+            for(int i=0;i<parts.Length;i++)
             {
-                beamList.Add(mo as Part);
+                modelObjects.MoveNext();
+                parts[i] = modelObjects.Current as Part;                
             }
-            return beamList;
+            return parts;
         }
         public static void CreateForComponent(Element.ProfileType profileType)
         {
@@ -101,7 +94,7 @@ namespace ZeroTouchTekla
         }
         public static void RecreateRebar()
         {
-            Model model = new Model();
+            
             Tekla.Structures.Model.UI.Picker partPicker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum partPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
 
@@ -121,7 +114,7 @@ namespace ZeroTouchTekla
                 if (profileType != Element.ProfileType.None)
                 {
                     Type[] Types = new Type[] { typeof(RebarSet) };
-                    ModelObjectEnumerator moe = model.GetModelObjectSelector().GetAllObjectsWithType(Types);
+                    ModelObjectEnumerator moe = Program.ActiveModel.GetModelObjectSelector().GetAllObjectsWithType(Types);
                     var rebarList = Utility.ToList(moe);
 
 
@@ -149,14 +142,14 @@ namespace ZeroTouchTekla
                     {
                         bool deleted = rs.Delete();
                     }
-                    model.CommitChanges();
+                    Program.ActiveModel.CommitChanges();
 
                     // RebarCreator rebarCreator = new RebarCreator();
                     //Store current work plane
-                    TransformationPlane currentPlane = model.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+                    TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
                     //Get beam local plane
                     TransformationPlane localPlane = new TransformationPlane(beam.GetCoordinateSystem());
-                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+                    Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
 
                     Element element;
                     switch (profileType)
@@ -176,11 +169,11 @@ namespace ZeroTouchTekla
 
                     element.CreateSingle(rebarName);
                     //Restore user work plane
-                    model.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
-                    model.CommitChanges();
+                    Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+                    Program.ActiveModel.CommitChanges();
 
-                    ChangeLayer(model,element);
-                    ChangeLayer(model,element);
+                    ChangeLayer( Program.ActiveModel, element);
+                    ChangeLayer(Program.ActiveModel, element);
                 }
             }
             catch (System.ApplicationException)

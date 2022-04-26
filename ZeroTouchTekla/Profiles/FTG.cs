@@ -7,11 +7,32 @@ using System.Text.RegularExpressions;
 using Tekla.Structures;
 using Tekla.Structures.Model;
 using Tekla.Structures.Geometry3d;
+using System.Reflection;
 
 namespace ZeroTouchTekla.Profiles
 {
     public class FTG : Element
     {
+        #region Fields
+        public enum RebarType
+        {
+            FS,
+            S,
+            TPR,
+            BPR,
+            BLR,
+            TLR,
+            CCSR,
+            CLR
+        }
+        double Width;
+        double FirstHeight;
+        double SecondHeight;
+        double AsymWidth;
+        double Length;
+        double HorizontalOffset;
+        double VerticalOffset;
+        #endregion
         #region Constructor
         public FTG(params Part[] parts) 
         {
@@ -21,11 +42,16 @@ namespace ZeroTouchTekla.Profiles
             }
             else
             {
+                base.BaseParts = parts;
                 SetLocalPlane();
                 GetProfilePointsAndParameters(parts[0]);
             }
         }
         #endregion
+        #region Properties
+
+        #endregion
+
         #region PublicMathods
         public void GetProfilePointsAndParameters(Part part)
         {
@@ -41,6 +67,8 @@ namespace ZeroTouchTekla.Profiles
             double firstHeight = Convert.ToDouble(profileValues[1]);
             double secondHeight = Convert.ToDouble(profileValues[2]);
             double length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
+            length -= beam.StartPointOffset.Dx;
+            length += beam.EndPointOffset.Dx;
 
             Width = width;
             FirstHeight = firstHeight;
@@ -106,7 +134,7 @@ namespace ZeroTouchTekla.Profiles
             ElementFace = new ElementFace(ProfilePoints);
         }
         public override void Create()
-        {
+        {            
             if (Convert.ToInt32(Program.ExcelDictionary["S_FullStirrups"]) == 1)
             {
                 FullStirrups();
@@ -115,9 +143,9 @@ namespace ZeroTouchTekla.Profiles
             {
                 Stirrups();
             }
+
             TopPerpendicularRebar();
             BottomPerpendicularRebar();
-
             BottomLongitudinalRebar();
             TopLongitudinalLeftRebar();
             TopLongitudinalRightRebar();
@@ -127,7 +155,6 @@ namespace ZeroTouchTekla.Profiles
             ClosingLongitudinalRebar(2);
             ClosingLongitudinalRebar(3);
             ClosingLongitudinalRebar(4);
-
         }
         public override void CreateSingle(string rebarName)
         {
@@ -326,8 +353,8 @@ namespace ZeroTouchTekla.Profiles
                 rightHookModifier.Insert();
                 new Model().CommitChanges();
 
-                rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-               LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1, 1, 1 });
+                PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod()); 
+                LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1, 1, 1 });
             }
         }
         void Stirrups()
@@ -439,8 +466,8 @@ namespace ZeroTouchTekla.Profiles
 
                 new Model().CommitChanges();
 
-                rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-               LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1 });
+                PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+                LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1 });
             }
         }
         void TopPerpendicularRebar()
@@ -507,8 +534,8 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2, 1 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 2, 2, 1 });
         }
         void BottomPerpendicularRebar()
         {
@@ -609,8 +636,8 @@ namespace ZeroTouchTekla.Profiles
                 endHookModifier.Insert();
             }
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2 });
         }
         void BottomLongitudinalRebar()
         {
@@ -655,8 +682,8 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
         }
         void TopLongitudinalLeftRebar()
         {
@@ -701,8 +728,8 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
         }
         void TopLongitudinalRightRebar()
         {
@@ -747,8 +774,8 @@ namespace ZeroTouchTekla.Profiles
             bool succes = rebarSet.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 3 });
         }
         void ClosingCShapeRebar(int faceNumber)
         {
@@ -854,8 +881,8 @@ namespace ZeroTouchTekla.Profiles
             topLengthModifierRight.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3, 3, 3 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 3, 3, 3 });
         }
         void ClosingLongitudinalRebar(int faceNumber)
         {
@@ -992,33 +1019,10 @@ namespace ZeroTouchTekla.Profiles
             topLengthModifier.Insert();
             new Model().CommitChanges();
 
-            rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
-           LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
         }
         #endregion
-        #region Properties
-
-        #endregion
-        #region Fields
-        public enum RebarType
-        {
-            FS,
-            S,
-            TPR,
-            BPR,
-            BLR,
-            TLR,
-            CCSR,
-            CLR
-        }
-        static double Width;
-        static double FirstHeight;
-        static double SecondHeight;
-        static double AsymWidth;
-        static double Length;
-        static double HorizontalOffset;
-        static double VerticalOffset;
-
-        #endregion
+       
     }
 }

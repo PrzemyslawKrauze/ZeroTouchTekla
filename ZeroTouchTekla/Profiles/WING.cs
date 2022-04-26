@@ -10,7 +10,7 @@ namespace ZeroTouchTekla.Profiles
 {
     public class WING : Element
     {
-        public WING(Beam part) : base(part)
+        public WING(Beam part)
         {
             SetLocalPlane();
             GetProfilePointsAndParameters(part);

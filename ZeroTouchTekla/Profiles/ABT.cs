@@ -344,20 +344,13 @@ namespace ZeroTouchTekla.Profiles
         #region PrivateMethods   
         void OuterVerticalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["OVR_Diameter"];
-            int rebarDiameter = Convert.ToInt32(rebarSize);
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["OVR_Diameter"]);
             string spacing = Program.ExcelDictionary["OVR_Spacing"];
             int addSplitter = Convert.ToInt32(Program.ExcelDictionary["OVR_AddSplitter"]);
-            string secondRebarSize = Program.ExcelDictionary["OVR_SecondDiameter"];
+            int secondRebarSize = Convert.ToInt32(Program.ExcelDictionary["OVR_SecondDiameter"]);
             double spliterOffset = Convert.ToDouble(Program.ExcelDictionary["OVR_SplitterOffset"]) + Convert.ToDouble(rebarSize) * 20;
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "ABT_OVR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet("ABT_OVR",rebarSize);
 
             //Itarate throught ProfilePoints
             int profilePointsMax = ProfilePoints.Count - 1;
@@ -403,7 +396,7 @@ namespace ZeroTouchTekla.Profiles
             var innerEndDetailModifier = new RebarEndDetailModifier();
             innerEndDetailModifier.Father = rebarSet;
             innerEndDetailModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.LEG_LENGTH;
-            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarDiameter);
+            innerEndDetailModifier.RebarLengthAdjustment.AdjustmentLength = GetHookLength(rebarSize);
             innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedStartPoint, null));
             innerEndDetailModifier.Curve.AddContourPoint(new ContourPoint(offsetedEndPoint, null));
             innerEndDetailModifier.Insert();
@@ -433,8 +426,8 @@ namespace ZeroTouchTekla.Profiles
                 topSpliter.BarsAffected = BaseRebarModifier.BarsAffectedEnum.EVERY_SECOND_BAR;
                 topSpliter.FirstAffectedBar = 2;
 
-                Point startTopIntersection = new Point(startIntersection.X, startIntersection.Y + 1.3 * 40 * rebarDiameter, startIntersection.Z);
-                Point endTopIntersection = new Point(endIntersection.X, endIntersection.Y + 1.3 * 40 * rebarDiameter, endIntersection.Z);
+                Point startTopIntersection = new Point(startIntersection.X, startIntersection.Y + 1.3 * 40 * rebarSize, startIntersection.Z);
+                Point endTopIntersection = new Point(endIntersection.X, endIntersection.Y + 1.3 * 40 * rebarSize, endIntersection.Z);
 
                 topSpliter.Curve.AddContourPoint(new ContourPoint(startTopIntersection, null));
                 topSpliter.Curve.AddContourPoint(new ContourPoint(endTopIntersection, null));
@@ -445,7 +438,7 @@ namespace ZeroTouchTekla.Profiles
                     var propertyModifier = new RebarPropertyModifier();
                     propertyModifier.Father = rebarSet;
                     propertyModifier.BarsAffected = BaseRebarModifier.BarsAffectedEnum.ALL_BARS;
-                    propertyModifier.RebarProperties.Size = secondRebarSize;
+                    propertyModifier.RebarProperties.Size = secondRebarSize.ToString();
                     propertyModifier.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(secondRebarSize));
                     propertyModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
                     propertyModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[profilePointsMax][1], null));

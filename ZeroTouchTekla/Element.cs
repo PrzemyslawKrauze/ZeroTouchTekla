@@ -69,7 +69,7 @@ namespace ZeroTouchTekla
         private List<List<Point>> profilePoints = new List<List<Point>>();
         private Dictionary<string, double> profileParameters = new Dictionary<string, double>();
         private Dictionary<int, int[]> layerDictionary = new Dictionary<int, int[]>();
-        private Part basePart;
+        private Part[] baseParts;
         //Constructors
         public static Element Create(params Part[] parts)
         {
@@ -83,7 +83,14 @@ namespace ZeroTouchTekla
                     element = new FTG(parts);
                     break;
                 case ProfileType.RTW:
-                    element = new RTW(parts);
+                    if (parts.Length > 1)
+                    {
+                        element = new DRTW(parts);
+                    }
+                    else
+                    {
+                        element = new RTW(parts);
+                    }
                     break;
                 case ProfileType.DRTW:
                     element = new DRTW(parts);
@@ -105,10 +112,13 @@ namespace ZeroTouchTekla
             }
             element.SetCover(parts[0]);
 
+            element.Create();
+
+
             return element;
         }
         protected Element() { }
-        static Element.ProfileType GetProfileType(string profileString)
+         public static Element.ProfileType GetProfileType(string profileString)
         {
             switch(profileString)
             {
@@ -118,8 +128,6 @@ namespace ZeroTouchTekla
                     return ProfileType.RTWS;
                 case var _ when profileString.StartsWith("RTW"):
                     return ProfileType.RTW;
-                case var _ when profileString.StartsWith("DRTW"):
-                    return ProfileType.DRTW;
                 case var _ when profileString.StartsWith("CLMN"):
                     return ProfileType.CLMN;
                 case var _ when profileString.StartsWith("ABT"):
@@ -147,7 +155,7 @@ namespace ZeroTouchTekla
             APS
         }
         public Dictionary<int, int[]> LayerDictionary { get => layerDictionary; }
-        protected Part BasePart { get => basePart; set => basePart = value; }
+        protected Part[] BaseParts { get => baseParts; set => baseParts = value; }
         public List<List<Point>> ProfilePoints { get => profilePoints; set => profilePoints = value; }
         protected Dictionary<string, double> ProfileParameters { get => profileParameters; set => profileParameters = value; }
         public double SideCover = 0;
@@ -176,7 +184,7 @@ namespace ZeroTouchTekla
         public void SetLocalPlane()
         {
             Model model = new Model();
-            TransformationPlane localPlane = new TransformationPlane(BasePart.GetCoordinateSystem());
+            TransformationPlane localPlane = new TransformationPlane(BaseParts.FirstOrDefault().GetCoordinateSystem());
             model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
         }              
         protected static double GetHookLength(double diameter)
