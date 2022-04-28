@@ -12,6 +12,19 @@ namespace ZeroTouchTekla.Profiles
 {
     public class RTW : Element
     {
+        /*
+        3-------4
+        |       |
+        |       |   
+         2--1   |
+            |   5
+            |    \
+            |     \
+            |      6
+            |      |
+            |      | 
+            0------7
+        */
         #region Fields
         enum RebarType
         {
@@ -798,7 +811,7 @@ namespace ZeroTouchTekla.Profiles
 
             double correctedHeight = Height > Height2 ? Height : Height2;
             correctedHeight = correctedHeight - startOffset - CorniceHeight - 10 * rebarSize;
-            int correctedNumberOfRows = (int)Math.Ceiling(correctedHeight / Convert.ToDouble(verticalSpacing));
+            int correctedNumberOfRows = (int)Math.Floor(correctedHeight / Convert.ToDouble(verticalSpacing));
             double offset = startOffset + 10 * Convert.ToInt32(rebarSize);
 
             for (int i = 0; i < correctedNumberOfRows; i++)

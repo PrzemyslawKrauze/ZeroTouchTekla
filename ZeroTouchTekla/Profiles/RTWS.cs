@@ -9,9 +9,37 @@ namespace ZeroTouchTekla.Profiles
 {
     public class RTWS : Element
     {
+        #region Fields
+        enum RebarType
+        {
+            IVR,
+            OVR,
+            ILR,
+            TOLR,
+            BOLR,
+            CrPR,
+            CrLR,
+            CCSR,
+            CLR
+        }
+         double _topWidth;
+         double _corniceWidth;
+         double _bottomWidth;
+         double _bottomHeight;
+         double _skewHeight;
+         double _corniceHeight;
+         double _height;
+         double _height2;
+         double _length;
+         double _maxHeight;
+         double _minHeight;
+        double _bottomHeight2;
+        #endregion
         #region Constructor
         public RTWS(params Part[] parts) : base()
         {
+            base.BaseParts = parts;
+            SetLocalPlane();
             SetFields(parts[0]);
             SetProfilePoints();
         }
@@ -21,7 +49,7 @@ namespace ZeroTouchTekla.Profiles
         {
             Beam beam = part as Beam;
             string[] profileValues = GetProfileValues(beam);
-            //RTWSV Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2
+            //RTWSV Height*BottomHeight*SkewHeight*BottomWidth*TopWidth*CorniceWidth*CorniceHeight*Height2*BottomHeight2
             _height = Convert.ToDouble(profileValues[0]);
             _bottomHeight = Convert.ToDouble(profileValues[1]);
             _skewHeight = Convert.ToDouble(profileValues[2]);
@@ -30,9 +58,13 @@ namespace ZeroTouchTekla.Profiles
             _corniceWidth = Convert.ToDouble(profileValues[5]);
             _corniceHeight = Convert.ToDouble(profileValues[6]);
             _length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
+            _length -= beam.StartPointOffset.Dx;
+            _length += beam.EndPointOffset.Dx;
+
             if (profileValues.Length > 7)
             {
                 _height2 = Convert.ToDouble(profileValues[7]);
+                _bottomHeight2 = Convert.ToDouble(profileValues[8]);
             }
             else
             {
@@ -46,6 +78,7 @@ namespace ZeroTouchTekla.Profiles
         {
             double fullWidth = BottomWidth +CorniceWidth;
             double topHeight = Height - BottomHeight - SkewHeight;
+            double topHeight2 = Height - _bottomHeight2 - SkewHeight;
 
             Point p0 = new Point(0, -_maxHeight / 2.0, fullWidth / 2.0 - CorniceWidth);
             Point p1 = new Point(0, p0.Y+Height - CorniceHeight, p0.Z);
@@ -75,9 +108,9 @@ namespace ZeroTouchTekla.Profiles
                 Point s2 = new Point(_length, s1.Y, s1.Z + CorniceWidth);
                 Point s3 = new Point(_length, s2.Y + CorniceHeight, s2.Z);
                 Point s4 = new Point(_length, s3.Y, p3.Z - TopWidth);
-                Point s5 = new Point(_length, p4.Y - topHeight, p4.Z);
+                Point s5 = new Point(_length, p4.Y - topHeight2, p4.Z);
                 Point s7 = new Point(_length, -_maxHeight / 2.0, -fullWidth / 2.0);
-                Point s6 = new Point(_length, -_maxHeight / 2.0 + BottomHeight, -fullWidth / 2.0);
+                Point s6 = new Point(_length, -_maxHeight / 2.0 + _bottomHeight2, -fullWidth / 2.0);
                 secondProfile = new List<Point> { s0, s1, s2, s3, s4, s5, s6, s7 };
             }
 
@@ -1216,25 +1249,19 @@ namespace ZeroTouchTekla.Profiles
         }
         void TopCShapeRebar()
         {
-            string rebarSize = Program.ExcelDictionary["CSR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["CSR_Diameter"]);
             string horizontalSpacing = Program.ExcelDictionary["CSR_HorizontalSpacing"];
             string verticalSpacing = Program.ExcelDictionary["CSR_VerticalSpacing"];
 
-            double height = _minHeight - _bottomHeight - _skewHeight;
+            double height = _maxHeight - _bottomHeight - _skewHeight;
             double correctedHeight = height - 10 * Convert.ToInt32(rebarSize);
             int correctedNumberOfRows = (int)Math.Floor(correctedHeight / Convert.ToDouble(verticalSpacing)) + 1;
             double offset = 10 * Convert.ToInt32(rebarSize);
 
             for (int i = 0; i < correctedNumberOfRows; i++)
             {
-                double newoffset = offset + i * Convert.ToDouble(verticalSpacing);
-                var rebarSet = new RebarSet();
-                rebarSet.RebarProperties.Name = "RTW_CSR";
-                rebarSet.RebarProperties.Grade = "B500SP";
-                rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-                rebarSet.RebarProperties.Size = rebarSize;
-                rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-                rebarSet.LayerOrderNumber = 1;
+                double newoffset = offset + i * Convert.ToDouble(verticalSpacing );
+                var rebarSet = TeklaUtils.CreateDefaultRebarSet("RTW_CSR", rebarSize);
 
                 Point startLeftTopPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][5].Y + newoffset, ProfilePoints[0][0].Z);
                 Point endLeftTopPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][5].Y + newoffset, ProfilePoints[1][0].Z);
@@ -1262,6 +1289,34 @@ namespace ZeroTouchTekla.Profiles
                 outerFace.Contour.AddContourPoint(new ContourPoint(startRightTopPoint, null));
                 rebarSet.LegFaces.Add(outerFace);
 
+                double guideLineStartOffset = 100;
+                double guideLineEndOffset = 100;
+                //Top plane for intersecting with guideline
+                if (Height != Height2)
+                {
+                    Vector gpXAxis = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]);
+                    Vector gpYAxis = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[0][3]);
+                    GeometricPlane topPlane = new GeometricPlane(ProfilePoints[0][4], gpXAxis, gpYAxis);
+                    Line line = new Line(startLeftTopPoint, endLeftTopPoint);
+                    Point intersection = Intersection.LineToPlane(line, topPlane);
+                    if (Height > Height2)
+                    {
+                        if (Distance.PointToPoint(startLeftTopPoint, endLeftTopPoint) > Distance.PointToPoint(startLeftTopPoint, intersection))
+                        {
+                            endLeftTopPoint = intersection;
+                            guideLineEndOffset = 500;
+                        }
+                    }
+                    else
+                    {
+                        if (Distance.PointToPoint(startLeftTopPoint, endLeftTopPoint) > Distance.PointToPoint(endLeftTopPoint, intersection))
+                        {
+                            startLeftTopPoint = Intersection.LineToPlane(line, topPlane);
+                            guideLineStartOffset = 500;
+                        }
+                    }
+                }
+
                 var guideline = new RebarGuideline();
                 guideline.Spacing.Zones.Add(new RebarSpacingZone
                 {
@@ -1270,8 +1325,8 @@ namespace ZeroTouchTekla.Profiles
                     Length = 100,
                     LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
                 });
-                guideline.Spacing.StartOffset = 100;
-                guideline.Spacing.EndOffset = 100;
+                guideline.Spacing.StartOffset = guideLineStartOffset;
+                guideline.Spacing.EndOffset = guideLineEndOffset;
 
                 guideline.Curve.AddContourPoint(new ContourPoint(startLeftTopPoint, null));
                 guideline.Curve.AddContourPoint(new ContourPoint(endLeftTopPoint, null));
@@ -1317,30 +1372,6 @@ namespace ZeroTouchTekla.Profiles
         public double MaxHeight { get { return _maxHeight; } }
         public double MinHeight { get { return _minHeight; } }
         #endregion
-        #region Fields
-        enum RebarType
-        {
-            IVR,
-            OVR,
-            ILR,
-            TOLR,
-            BOLR,
-            CrPR,
-            CrLR,
-            CCSR,
-            CLR
-        }
-        static double _topWidth;
-        static double _corniceWidth;
-        static double _bottomWidth;
-        static double _bottomHeight;
-        static double _skewHeight;
-        static double _corniceHeight;
-        static double _height;
-        static double _height2;
-        static double _length;
-        static double _maxHeight;
-        static double _minHeight;
-        #endregion
+ 
     }
 }

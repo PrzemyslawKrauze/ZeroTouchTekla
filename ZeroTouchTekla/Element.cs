@@ -5,6 +5,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 
 using Tekla.Structures;
+using Tekla.Structures.Solid;
 using Tekla.Structures.Model;
 using Tekla.Structures.Geometry3d;
 
@@ -58,11 +59,102 @@ namespace ZeroTouchTekla
                 return 4 * diameter;
             }
         }
+        public static Face[] GetPartEndFaces(Part part)
+        {
+            Solid soild = part.GetSolid();
+            FaceEnumerator faceEnumerator = soild.GetFaceEnumerator();
+            List<Face> faces = GetFacesFromFaceEnumerator(faceEnumerator);
+            double maxVertex = 0;
+            double minVertex = 0;
+            Face startFace = null;
+            Face endFace = null;
+            for (int i = 0; i < faces.Count; i++)
+            {
+                Face currentFace = faces[i];
+                LoopEnumerator loopEnumerator = currentFace.GetLoopEnumerator();
+                List<Point> points = GetPointsFromLoopEnumerator(loopEnumerator);
+                double vertexXsum = 0;
+                foreach (Point p in points)
+                {
+                    vertexXsum += p.X;
+                }
+                if (vertexXsum >= maxVertex)
+                {
+                    maxVertex = vertexXsum;
+                    endFace = currentFace;
+                }
+                if (vertexXsum <= minVertex)
+                {
+                    minVertex = vertexXsum;
+                    startFace = currentFace;
+                }
+            }
+            Face[] faceArray = new Face[] { startFace, endFace };
+            return faceArray;
+        }
+        public static List<List<Point>> GetPointsFromFaces(Face[] faces)
+        {
+            List<List<Point>> pointLists = new List<List<Point>>();
+            for (int i = 0; i < faces.Count(); i++)
+            {
+                List<Point> points = new List<Point>();
+                LoopEnumerator loopEnum = faces[i].GetLoopEnumerator();
+                loopEnum.MoveNext();
+                Loop loop = loopEnum.Current;
+                VertexEnumerator vertexEnumerator = loop.GetVertexEnumerator();
+                while (vertexEnumerator.MoveNext())
+                {
+                    points.Add(vertexEnumerator.Current);
+                }
+                pointLists.Add(points);
+            }
+            return pointLists;
+        }
+        public static List<List<Point>> SortPoints(List<List<Point>> pointsList)
+        {
+            List<List<Point>> sortedPoints = new List<List<Point>>();
+            foreach(List<Point> points in pointsList)
+            {
+                List<Point> sortedList = (from Point p in points
+                                 orderby p.X, p.Y, p.Z ascending
+                                 select p).ToList();
+                sortedPoints.Add(sortedList);
+            }
+            return sortedPoints;
+        }
+        public static List<Face> GetFacesFromFaceEnumerator(FaceEnumerator faceEnumerator)
+        {
+            List<Face> faces = new List<Face>();
+            while (faceEnumerator.MoveNext())
+            {
+                faces.Add(faceEnumerator.Current);
+            }
+            return faces;
+        }
+        public static List<Point> GetPointsFromLoopEnumerator(LoopEnumerator loopEnumerator)
+        {
+            List<Point> points = new List<Point>();
+            loopEnumerator.MoveNext();
+            VertexEnumerator vertexEnumerator = loopEnumerator.Current.GetVertexEnumerator();
+
+            while (vertexEnumerator.MoveNext())
+            {
+                points.Add(vertexEnumerator.Current);
+            }
+            return points;
+        }
+        public static List<List<Point>> GetSortedPointsFromPart(Part part)
+        {
+            Face[] faces = TeklaUtils.GetPartEndFaces(part);
+            List<List<Point>> points = TeklaUtils.GetPointsFromFaces(faces);
+            points = TeklaUtils.SortPoints(points);
+            return points;
+        }
     }
     public abstract class Element
     {
         //Constant
-        private string COV_THICK_SIDES= "__CovThickSides";
+        private string COV_THICK_SIDES = "__CovThickSides";
         private string COV_THICK_BOTTOM = "__CovThickBottom";
         private string COV_THICK_TOP = "__CovThickTop";
         //Fields
@@ -74,7 +166,7 @@ namespace ZeroTouchTekla
         public static Element Create(params Part[] parts)
         {
             string partName = parts[0].Profile.ProfileString;
-           
+
             ProfileType profileType = GetProfileType(partName);
             Element element;
             switch (profileType)
@@ -98,7 +190,7 @@ namespace ZeroTouchTekla
                 case ProfileType.RTWS:
                     element = new RTWS(parts);
                     break;
-                case ProfileType.CLMN:
+                case ProfileType.RCLMN:
                     element = new CLMN(parts);
                     break;
                 case ProfileType.ABT:
@@ -118,9 +210,9 @@ namespace ZeroTouchTekla
             return element;
         }
         protected Element() { }
-         public static Element.ProfileType GetProfileType(string profileString)
+        public static Element.ProfileType GetProfileType(string profileString)
         {
-            switch(profileString)
+            switch (profileString)
             {
                 case var _ when profileString.StartsWith("FTG"):
                     return ProfileType.FTG;
@@ -128,8 +220,8 @@ namespace ZeroTouchTekla
                     return ProfileType.RTWS;
                 case var _ when profileString.StartsWith("RTW"):
                     return ProfileType.RTW;
-                case var _ when profileString.StartsWith("CLMN"):
-                    return ProfileType.CLMN;
+                case var _ when profileString.StartsWith("RCLMN"):
+                    return ProfileType.RCLMN;
                 case var _ when profileString.StartsWith("ABT"):
                     return ProfileType.ABT;
                 case var _ when profileString.StartsWith("TABT"):
@@ -148,7 +240,7 @@ namespace ZeroTouchTekla
             RTW,
             DRTW,
             RTWS,
-            CLMN,
+            RCLMN,
             ABT,
             TABT,
             WING,
@@ -177,6 +269,7 @@ namespace ZeroTouchTekla
             string[] profileValues = profileName.Split('*');
             return profileValues;
         }
+
         //Abstract methods
         public abstract void Create();
         public abstract void CreateSingle(string barName);
@@ -186,11 +279,11 @@ namespace ZeroTouchTekla
             Model model = new Model();
             TransformationPlane localPlane = new TransformationPlane(BaseParts.FirstOrDefault().GetCoordinateSystem());
             model.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
-        }              
+        }
         protected static double GetHookLength(double diameter)
         {
             return 10 * diameter;
-        }        
+        }
         protected void PostRebarCreationMethod(RebarSet rebarSet, System.Reflection.MethodBase methodBase)
         {
             rebarSet.SetUserProperty(RebarCreator.FATHER_ID_NAME, RebarCreator.FatherID);
@@ -208,7 +301,7 @@ namespace ZeroTouchTekla
             string diameter = rebarSet.RebarProperties.Size;
             rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
             rebarSet.SetUserProperty("__MIN_BAR_LENGTH", RebarCreator.MinLengthCoefficient * Convert.ToDouble(diameter));
-        }              
+        }
     }
     public class ElementFace
     {
@@ -256,13 +349,13 @@ namespace ZeroTouchTekla
                 rebarLegFaces.Add(endFace);
             }
         }
-        public RebarLegFace GetRebarLegFace(int faceNumber)
+        private RebarLegFace GetRebarLegFace(int faceNumber)
         {
             return rebarLegFaces[faceNumber];
         }
 
         List<RebarLegFace> rebarLegFaces;
-
+       
     }
 
 }

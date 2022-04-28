@@ -91,7 +91,7 @@ namespace ZeroTouchTekla
 
         private void OnCollumnButtonClick(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(Element.ProfileType.CLMN);
+            RebarCreator.CreateForPart(Element.ProfileType.RCLMN);
         }
 
         private void OnDoubleRTWButtonClick(object sender, EventArgs e)

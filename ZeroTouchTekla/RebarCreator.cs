@@ -7,6 +7,8 @@ using Tekla.Structures.Filtering;
 using Tekla.Structures.Filtering.Categories;
 using Tekla.Structures.Model;
 using Tekla.Structures.Model.Operations;
+using Tekla.Structures.Solid;
+using Tekla.Structures.Geometry3d;
 using ZeroTouchTekla.Profiles;
 
 
@@ -17,12 +19,33 @@ namespace ZeroTouchTekla
     {
         public static void Test()
         {
-            ModelInfo info =  Program.ActiveModel.GetInfo();
+            //Store current plane
+            TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+            //Pick part
+            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
+            ModelObject modelObject = picker.PickObject(Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART, "Pick part");
+            Part part = modelObject as Part;
+            TransformationPlane localPlane = new TransformationPlane(part.GetCoordinateSystem());
+            Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
 
-            // Creates the filter expressions
-            IEnumerable<ModelObject.ModelObjectEnum> modelObjectEnums = new[] { ModelObject.ModelObjectEnum.BEAM,ModelObject.ModelObjectEnum.CONTOURPLATE };
-           Tekla.Structures.Model.History.ModificationInfo modificationInfo=  Tekla.Structures.Model.History.ModelHistory.TakeModifications("test", modelObjectEnums, null);
-           
+            Face[] faces = TeklaUtils.GetPartEndFaces(modelObject as Part);
+            List<List<Point>> points = TeklaUtils.GetPointsFromFaces(faces);
+            points = TeklaUtils.SortPoints(points);
+            Tekla.Structures.Model.UI.GraphicsDrawer graphicsDrawer = new Tekla.Structures.Model.UI.GraphicsDrawer();
+            for(int i=0;i< points.Count;i++)
+            {
+                List<Point> currentList = points[i];
+                for(int j=0;j<currentList.Count;j++)
+                {
+                    string text = i.ToString() + j.ToString();
+                    Tekla.Structures.Model.UI.Color color = new Tekla.Structures.Model.UI.Color();
+                    graphicsDrawer.DrawText(currentList[j], text, color);
+                }
+            }
+
+            //Restore user's plane
+            Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+            Program.ActiveModel.CommitChanges();
         }
         public static void CreateForPart(Element.ProfileType profileType)
         {
@@ -42,13 +65,13 @@ namespace ZeroTouchTekla
         {
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             ModelObjectEnumerator modelObjects = picker.PickObjects(Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS, "Pick parts");
-           
+
             Part[] parts = new Part[modelObjects.GetSize()];
 
-            for(int i=0;i<parts.Length;i++)
+            for (int i = 0; i < parts.Length; i++)
             {
                 modelObjects.MoveNext();
-                parts[i] = modelObjects.Current as Part;                
+                parts[i] = modelObjects.Current as Part;
             }
             return parts;
         }
@@ -85,7 +108,7 @@ namespace ZeroTouchTekla
                     model.CommitChanges();
                     ChangeLayer(model, element);
                     ChangeLayer(model, element);
-                }               
+                }
             }
             catch (System.ApplicationException)
             {
@@ -94,7 +117,7 @@ namespace ZeroTouchTekla
         }
         public static void RecreateRebar()
         {
-            
+
             Tekla.Structures.Model.UI.Picker partPicker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum partPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
 
@@ -121,7 +144,7 @@ namespace ZeroTouchTekla
                     List<RebarSet> selectedRebars = (from RebarSet r in rebarList
                                                      where Utility.GetUserProperty(r, FATHER_ID_NAME) == beam.Identifier.ID
                                                      select r).ToList();
-                    Dictionary<int,int[]> currentLayerDictionary = new Dictionary<int,int[]>();
+                    Dictionary<int, int[]> currentLayerDictionary = new Dictionary<int, int[]>();
                     foreach (RebarSet rs in selectedRebars)
                     {
                         List<RebarLegFace> rebarLegFaces = rs.LegFaces;
@@ -158,9 +181,9 @@ namespace ZeroTouchTekla
                             element = new FTG(beam);
                             break;
                         case Element.ProfileType.RTW:
-                           element= new RTW(beam);
+                            element = new RTW(beam);
                             break;
-                        case Element.ProfileType.CLMN:
+                        case Element.ProfileType.RCLMN:
                             element = new CLMN(beam);
                             break;
                         default:
@@ -172,7 +195,7 @@ namespace ZeroTouchTekla
                     Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
                     Program.ActiveModel.CommitChanges();
 
-                    ChangeLayer( Program.ActiveModel, element);
+                    ChangeLayer(Program.ActiveModel, element);
                     ChangeLayer(Program.ActiveModel, element);
                 }
             }
@@ -217,10 +240,10 @@ namespace ZeroTouchTekla
             }
         }
 
-       
-       
+
+
         public static int FatherID;
-        
+
         public const string FATHER_ID_NAME = "ZTB_FatherIDName";
         public const string METHOD_NAME = "ZTB_MethodName";
         public const string MethodInput = "ZTB_MethodInput";

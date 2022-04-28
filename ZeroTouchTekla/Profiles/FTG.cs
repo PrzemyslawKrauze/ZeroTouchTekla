@@ -3,11 +3,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Collections;
 
 using Tekla.Structures;
 using Tekla.Structures.Model;
 using Tekla.Structures.Geometry3d;
 using System.Reflection;
+using Tekla.Structures.Solid;
+
 
 namespace ZeroTouchTekla.Profiles
 {
@@ -32,9 +35,10 @@ namespace ZeroTouchTekla.Profiles
         double Length;
         double HorizontalOffset;
         double VerticalOffset;
+        List<RebarLegFace> rebarLegFaces = new List<RebarLegFace>();
         #endregion
         #region Constructor
-        public FTG(params Part[] parts) 
+        public FTG(params Part[] parts)
         {
             if (parts.Count() > 1)
             {
@@ -44,20 +48,124 @@ namespace ZeroTouchTekla.Profiles
             {
                 base.BaseParts = parts;
                 SetLocalPlane();
-                GetProfilePointsAndParameters(parts[0]);
+                //GetProfilePointsAndParameters(parts[0]);
+                SetProfileParameters(parts[0]);
+                SetProfilePoints(parts[0]);
+                SetRebarLegFaces();
             }
         }
         #endregion
-        #region Properties
-
-        #endregion
 
         #region PublicMathods
-        public void GetProfilePointsAndParameters(Part part)
+        void SetProfileParameters(Part part)
         {
             Beam beam = part as Beam;
             //Get beam local plane
-      
+
+            string[] profileValues = GetProfileValues(beam);
+            string profileName = beam.Profile.ProfileString;
+            //FTG Width*FirstHeight*SecondHeight
+            //FTGASYM Width*FirstHeight*SecondHeight*AsymWidth
+            //FTGSK Width*FirstHeight*SecondHeight*HorizontalOfset*VerticalOffset
+            double width = Convert.ToDouble(profileValues[0]);
+            double firstHeight = Convert.ToDouble(profileValues[1]);
+            double secondHeight = Convert.ToDouble(profileValues[2]);
+            double length = Distance.PointToPoint(beam.StartPoint, beam.EndPoint);
+            length -= beam.StartPointOffset.Dx;
+            length += beam.EndPointOffset.Dx;
+
+            Width = width;
+            FirstHeight = firstHeight;
+            SecondHeight = secondHeight;
+            Length = length;
+
+            if (profileName.Contains("ASYM"))
+            {
+                double asymWidth = Convert.ToDouble(profileValues[3]);
+                AsymWidth = asymWidth;
+            }
+            else
+            {
+                AsymWidth = 0;
+            }
+
+            if (profileName.Contains("V"))
+            {
+                if (AsymWidth == 0)
+                {
+                    HorizontalOffset = Convert.ToDouble(profileValues[3]);
+                    VerticalOffset = Convert.ToDouble(profileValues[4]);
+                }
+                else
+                {
+                    HorizontalOffset = Convert.ToDouble(profileValues[4]);
+                    VerticalOffset = Convert.ToDouble(profileValues[5]);
+                }
+            }
+        }
+        void SetProfilePoints(Part part)
+        {
+            base.ProfilePoints = TeklaUtils.GetSortedPointsFromPart(part);
+        }
+        void SetRebarLegFaces()
+        {
+            RebarLegFace startFace = new RebarLegFace();
+            startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
+            startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            rebarLegFaces.Add(startFace);
+
+            RebarLegFace firstFace = new RebarLegFace();
+            firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
+            firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));          
+            rebarLegFaces.Add(firstFace);
+
+            RebarLegFace secondFace = new RebarLegFace();
+            secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
+            secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
+            secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
+            secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            rebarLegFaces.Add(secondFace);
+
+            RebarLegFace thirdFace = new RebarLegFace();
+            thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
+            thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            rebarLegFaces.Add(thirdFace);
+
+            RebarLegFace fourthFace = new RebarLegFace();
+            fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
+            fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+            fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            rebarLegFaces.Add(fourthFace);
+
+            RebarLegFace fifthFace = new RebarLegFace();
+            fifthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            fifthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+            fifthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
+            fifthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            rebarLegFaces.Add(fifthFace);
+
+            RebarLegFace endFace = new RebarLegFace();
+            endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
+            endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
+            endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+            endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+            endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            rebarLegFaces.Add(endFace);
+
+        }
+        void GetProfilePointsAndParameters(Part part)
+        {
+            Beam beam = part as Beam;
+            //Get beam local plane
+
             string[] profileValues = GetProfileValues(beam);
             string profileName = beam.Profile.ProfileString;
             //FTG Width*FirstHeight*SecondHeight
@@ -134,7 +242,7 @@ namespace ZeroTouchTekla.Profiles
             ElementFace = new ElementFace(ProfilePoints);
         }
         public override void Create()
-        {            
+        {
             if (Convert.ToInt32(Program.ExcelDictionary["S_FullStirrups"]) == 1)
             {
                 FullStirrups();
@@ -204,7 +312,7 @@ namespace ZeroTouchTekla.Profiles
             int stirrupSpacing = Convert.ToInt32(Program.ExcelDictionary["S_StirrupSpacing"]);
 
             double length = Length;
-            int numberOfStirrupSets = (int)Math.Floor((length - 2 * SideCover) / (stirrupSpacing + barSpacing));         
+            int numberOfStirrupSets = (int)Math.Floor((length - 2 * SideCover) / (stirrupSpacing + barSpacing));
             double leftover = length - barSpacing * numberOfStirrupSets - stirrupSpacing * (numberOfStirrupSets - 1);
             if (HorizontalOffset != 0)
             {
@@ -232,10 +340,10 @@ namespace ZeroTouchTekla.Profiles
                 GeometricPlane geometricPlane = new GeometricPlane(origin, normal);
 
                 Line line0 = new Line(ProfilePoints[0][0], ProfilePoints[1][0]);
-                Line line1 = new Line(ProfilePoints[0][1], ProfilePoints[1][1]);
-                Line line2 = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+                Line line1 = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+                Line line2 = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
                 Line line3 = new Line(ProfilePoints[0][3], ProfilePoints[1][3]);
-                Line line4 = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
+                Line line4 = new Line(ProfilePoints[0][1], ProfilePoints[1][1]);
                 Point point0 = Intersection.LineToPlane(line0, geometricPlane);
                 Point point1 = Intersection.LineToPlane(line1, geometricPlane);
                 Point point2 = Intersection.LineToPlane(line2, geometricPlane);
@@ -318,7 +426,7 @@ namespace ZeroTouchTekla.Profiles
                 if (i == numberOfStirrupSets - 1 && HorizontalOffset != 0)
                 {
                     startGL = correctedPoints[1][0];
-                   endGL = correctedPoints[1][4];
+                    endGL = correctedPoints[1][4];
                     GeometricPlane endPlane = new GeometricPlane(ProfilePoints[1][0], new Vector(1, 0, 0));
                     Line gl = new Line(startGL, endGL);
                     Point intersection = Intersection.LineToPlane(gl, endPlane);
@@ -353,7 +461,7 @@ namespace ZeroTouchTekla.Profiles
                 rightHookModifier.Insert();
                 new Model().CommitChanges();
 
-                PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod()); 
+                PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
                 LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 1, 1, 1, 1, 1 });
             }
         }
@@ -377,8 +485,8 @@ namespace ZeroTouchTekla.Profiles
                 rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
                 rebarSet.LayerOrderNumber = 1;
 
-                Point startMidPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y, ProfilePoints[0][2].Z);
-                Point endMidPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y, ProfilePoints[1][2].Z);
+                Point startMidPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y, ProfilePoints[0][4].Z);
+                Point endMidPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y, ProfilePoints[1][4].Z);
 
                 List<List<Point>> correctedPoints = new List<List<Point>>();
                 double additionalOffset = (leftover / 2.0 + i * barSpacing);
@@ -413,7 +521,7 @@ namespace ZeroTouchTekla.Profiles
                 guideline.Spacing.EndOffset = 100;
 
                 guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
-                guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+                guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
 
                 rebarSet.Guidelines.Add(guideline);
                 bool succes = rebarSet.Insert();
@@ -427,8 +535,8 @@ namespace ZeroTouchTekla.Profiles
                 };
                 leftTopHookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
                 leftTopHookModifier.RebarHook.Rotation = 90;
-                leftTopHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
                 leftTopHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
+                leftTopHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
                 leftTopHookModifier.Insert();
 
                 var rightTopHookModifier = new RebarEndDetailModifier
@@ -438,7 +546,7 @@ namespace ZeroTouchTekla.Profiles
                 };
                 rightTopHookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
                 rightTopHookModifier.RebarHook.Rotation = -90;
-                rightTopHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
+                rightTopHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
                 rightTopHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
                 rightTopHookModifier.Insert();
 
@@ -461,7 +569,7 @@ namespace ZeroTouchTekla.Profiles
                 rightBottomHookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
                 rightBottomHookModifier.RebarHook.Rotation = 90;
                 rightBottomHookModifier.Curve.AddContourPoint(new ContourPoint(endMidPoint, null));
-                rightBottomHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
+                rightBottomHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
                 rightBottomHookModifier.Insert();
 
                 new Model().CommitChanges();
@@ -482,16 +590,16 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
-            var leftFace = ElementFace.GetRebarLegFace(1);
+            var leftFace = rebarLegFaces[1];
             rebarSet.LegFaces.Add(leftFace);
 
-            var topLeftFace = ElementFace.GetRebarLegFace(2);
+            var topLeftFace = rebarLegFaces[2];
             rebarSet.LegFaces.Add(topLeftFace);
 
-            var topRightFace = ElementFace.GetRebarLegFace(3);
+            var topRightFace = rebarLegFaces[3];
             rebarSet.LegFaces.Add(topRightFace);
 
-            var rightFace = ElementFace.GetRebarLegFace(4);
+            var rightFace = rebarLegFaces[4];
             rebarSet.LegFaces.Add(rightFace);
 
             var guideline = new RebarGuideline();
@@ -505,25 +613,25 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = 100;
 
-            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]);
 
-            double firstDistance = Distance.PointToPoint(ProfilePoints[0][0], ProfilePoints[1][4]);
-            double secondDistance = Distance.PointToPoint(ProfilePoints[0][4], ProfilePoints[1][0]);
+            double firstDistance = Distance.PointToPoint(ProfilePoints[0][0], ProfilePoints[1][1]);
+            double secondDistance = Distance.PointToPoint(ProfilePoints[0][1], ProfilePoints[1][0]);
             Point startPoint, endPoint;
             if (firstDistance > secondDistance)
             {
                 startPoint = ProfilePoints[0][0];
-                endPoint = ProfilePoints[1][4];
+                endPoint = ProfilePoints[1][1];
             }
             else
             {
-                startPoint = ProfilePoints[0][4];
+                startPoint = ProfilePoints[0][1];
                 endPoint = ProfilePoints[1][0];
             }
 
             GeometricPlane startPlane = new GeometricPlane(startPoint, normal);
             GeometricPlane endPlane = new GeometricPlane(endPoint, normal);
-            Line longitudinal = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Line longitudinal = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
             Point startIntersection = Utility.GetExtendedIntersection(longitudinal, startPlane, 2);
             Point endIntersection = Utility.GetExtendedIntersection(longitudinal, endPlane, 2);
 
@@ -549,7 +657,7 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
-            var legFace1 = ElementFace.GetRebarLegFace(5);
+            var legFace1 = rebarLegFaces[5];
             rebarSet.LegFaces.Add(legFace1);
 
             var guideline = new RebarGuideline();
@@ -563,25 +671,25 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = 100;
 
-            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]);
 
-            double firstDistance = Distance.PointToPoint(ProfilePoints[0][0], ProfilePoints[1][4]);
-            double secondDistance = Distance.PointToPoint(ProfilePoints[0][4], ProfilePoints[1][0]);
+            double firstDistance = Distance.PointToPoint(ProfilePoints[0][0], ProfilePoints[1][1]);
+            double secondDistance = Distance.PointToPoint(ProfilePoints[0][1], ProfilePoints[1][0]);
             Point startPoint, endPoint;
             if (firstDistance > secondDistance)
             {
                 startPoint = ProfilePoints[0][0];
-                endPoint = ProfilePoints[1][4];
+                endPoint = ProfilePoints[1][1];
             }
             else
             {
-                startPoint = ProfilePoints[0][4];
+                startPoint = ProfilePoints[0][1];
                 endPoint = ProfilePoints[1][0];
             }
 
             GeometricPlane startPlane = new GeometricPlane(startPoint, normal);
             GeometricPlane endPlane = new GeometricPlane(endPoint, normal);
-            Line longitudinal = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Line longitudinal = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
             Point startIntersection = Utility.GetExtendedIntersection(longitudinal, startPlane, 2);
             Point endIntersection = Utility.GetExtendedIntersection(longitudinal, endPlane, 2);
 
@@ -608,8 +716,8 @@ namespace ZeroTouchTekla.Profiles
                 EndType = RebarEndDetailModifier.EndTypeEnum.HOOK
             };
             rightHookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
-            rightHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
-            rightHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
+            rightHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+            rightHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
             rightHookModifier.Insert();
             new Model().CommitChanges();
 
@@ -622,7 +730,7 @@ namespace ZeroTouchTekla.Profiles
                 };
                 startHookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
                 startHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
-                startHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+                startHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
                 startHookModifier.Insert();
 
                 var endHookModifier = new RebarEndDetailModifier
@@ -632,7 +740,7 @@ namespace ZeroTouchTekla.Profiles
                 };
                 endHookModifier.RebarHook.Shape = RebarHookData.RebarHookShapeEnum.HOOK_90_DEGREES;
                 endHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
-                endHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
+                endHookModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
                 endHookModifier.Insert();
             }
 
@@ -651,7 +759,7 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 2;
 
-            var legFace1 = ElementFace.GetRebarLegFace(5);
+            var legFace1 = rebarLegFaces[5];
             rebarSet.LegFaces.Add(legFace1);
 
             var guideline = new RebarGuideline();
@@ -665,12 +773,12 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = 100;
 
-            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][2], ProfilePoints[1][2]).GetNormal();
-            Point origin = new Point((ProfilePoints[0][2].X + ProfilePoints[1][2].X) / 2.0, ProfilePoints[0][2].Y, ProfilePoints[0][2].Z);
+            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]).GetNormal();
+            Point origin = new Point((ProfilePoints[0][4].X + ProfilePoints[1][4].X) / 2.0, ProfilePoints[0][4].Y, ProfilePoints[0][4].Z);
             GeometricPlane geometricPlane = new GeometricPlane(origin, normal);
 
             Line leftLine = new Line(ProfilePoints[0][0], ProfilePoints[1][0]);
-            Line rightLine = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
+            Line rightLine = new Line(ProfilePoints[0][1], ProfilePoints[1][1]);
 
             Point startIntersection = Intersection.LineToPlane(leftLine, geometricPlane);
             Point rightIntersection = Intersection.LineToPlane(rightLine, geometricPlane);
@@ -697,7 +805,7 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
-            var legFace1 = ElementFace.GetRebarLegFace(2);
+            var legFace1 = rebarLegFaces[2];
             rebarSet.LegFaces.Add(legFace1);
 
             var guideline = new RebarGuideline();
@@ -711,12 +819,12 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = 150;
             guideline.Spacing.EndOffset = Convert.ToDouble(spacing) / 2.0;
 
-            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][2], ProfilePoints[1][2]).GetNormal();
-            Point origin = new Point((ProfilePoints[0][2].X + ProfilePoints[1][2].X) / 2.0, ProfilePoints[0][2].Y, ProfilePoints[0][2].Z);
+            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]).GetNormal();
+            Point origin = new Point((ProfilePoints[0][4].X + ProfilePoints[1][4].X) / 2.0, ProfilePoints[0][4].Y, ProfilePoints[0][4].Z);
             GeometricPlane geometricPlane = new GeometricPlane(origin, normal);
 
-            Line leftLine = new Line(ProfilePoints[0][1], ProfilePoints[1][1]);
-            Line rightLine = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Line leftLine = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Line rightLine = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
 
             Point startIntersection = Intersection.LineToPlane(leftLine, geometricPlane);
             Point rightIntersection = Intersection.LineToPlane(rightLine, geometricPlane);
@@ -743,7 +851,7 @@ namespace ZeroTouchTekla.Profiles
             rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
             rebarSet.LayerOrderNumber = 1;
 
-            var legFace1 = ElementFace.GetRebarLegFace(3);
+            var legFace1 = rebarLegFaces[3];
             rebarSet.LegFaces.Add(legFace1);
 
             var guideline = new RebarGuideline();
@@ -757,11 +865,11 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = Convert.ToDouble(spacing) / 2.0;
             guideline.Spacing.EndOffset = 150;
 
-            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][2], ProfilePoints[1][2]).GetNormal();
-            Point origin = new Point((ProfilePoints[0][2].X + ProfilePoints[1][2].X) / 2.0, ProfilePoints[0][2].Y, ProfilePoints[0][2].Z);
+            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]).GetNormal();
+            Point origin = new Point((ProfilePoints[0][4].X + ProfilePoints[1][4].X) / 2.0, ProfilePoints[0][4].Y, ProfilePoints[0][4].Z);
             GeometricPlane geometricPlane = new GeometricPlane(origin, normal);
 
-            Line leftLine = new Line(ProfilePoints[0][2], ProfilePoints[1][2]);
+            Line leftLine = new Line(ProfilePoints[0][4], ProfilePoints[1][4]);
             Line rightLine = new Line(ProfilePoints[0][3], ProfilePoints[1][3]);
 
             Point startIntersection = Intersection.LineToPlane(leftLine, geometricPlane);
@@ -797,36 +905,36 @@ namespace ZeroTouchTekla.Profiles
             switch (faceNumber)
             {
                 case 1:
-                    mainFace = ElementFace.GetRebarLegFace(0);
+                    mainFace = rebarLegFaces[0];
                     bottomLeft = ProfilePoints[0][0];
-                    bottomRight = ProfilePoints[0][4];
+                    bottomRight = ProfilePoints[0][1];
                     endBottomLeft = ProfilePoints[1][0];
-                    endTopLeft = ProfilePoints[1][1];
-                    endTopMid = ProfilePoints[1][2];
-                    endBottomRight = ProfilePoints[1][4];
+                    endTopLeft = ProfilePoints[1][2];
+                    endTopMid = ProfilePoints[1][4];
+                    endBottomRight = ProfilePoints[1][1];
                     endTopRight = ProfilePoints[1][3];
                     break;
                 default:
-                    mainFace = ElementFace.GetRebarLegFace(6);
+                    mainFace = rebarLegFaces[6];
                     bottomLeft = ProfilePoints[1][0];
-                    bottomRight = ProfilePoints[1][4];
+                    bottomRight = ProfilePoints[1][1];
                     endBottomLeft = ProfilePoints[0][0];
-                    endTopLeft = ProfilePoints[0][1];
-                    endTopMid = ProfilePoints[0][2];
-                    endBottomRight = ProfilePoints[0][4];
+                    endTopLeft = ProfilePoints[0][2];
+                    endTopMid = ProfilePoints[0][4];
+                    endBottomRight = ProfilePoints[0][1];
                     endTopRight = ProfilePoints[0][3];
                     break;
             }
 
             rebarSet.LegFaces.Add(mainFace);
 
-            var bottomFace = ElementFace.GetRebarLegFace(5);
+            var bottomFace = rebarLegFaces[5];
             rebarSet.LegFaces.Add(bottomFace);
 
-            var topFaceLeft = ElementFace.GetRebarLegFace(2);
+            var topFaceLeft = rebarLegFaces[2];
             rebarSet.LegFaces.Add(topFaceLeft);
 
-            var topFaceRight = ElementFace.GetRebarLegFace(3);
+            var topFaceRight = rebarLegFaces[3];
             rebarSet.LegFaces.Add(topFaceRight);
 
             var guideline = new RebarGuideline();
@@ -840,8 +948,8 @@ namespace ZeroTouchTekla.Profiles
             guideline.Spacing.StartOffset = 150;
             guideline.Spacing.EndOffset = 150;
 
-            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][2], ProfilePoints[1][2]).GetNormal();
-            Point origin = new Point((ProfilePoints[0][2].X + ProfilePoints[1][2].X) / 2.0, ProfilePoints[0][2].Y, ProfilePoints[0][2].Z);
+            Vector normal = Utility.GetVectorFromTwoPoints(ProfilePoints[0][4], ProfilePoints[1][4]).GetNormal();
+            Point origin = new Point((ProfilePoints[0][4].X + ProfilePoints[1][4].X) / 2.0, ProfilePoints[0][4].Y, ProfilePoints[0][4].Z);
             GeometricPlane geometricPlane = new GeometricPlane(origin, normal);
 
             Line leftLine = new Line(bottomLeft, endBottomLeft);
@@ -906,12 +1014,12 @@ namespace ZeroTouchTekla.Profiles
             {
                 case 1:
                     bottomLeft = ProfilePoints[0][0];
-                    topLeft = ProfilePoints[0][1];
-                    bottomRight = ProfilePoints[0][4];
+                    topLeft = ProfilePoints[0][2];
+                    bottomRight = ProfilePoints[0][1];
                     topRight = ProfilePoints[0][3];
                     endBottomLeft = ProfilePoints[1][0];
-                    endTopLeft = ProfilePoints[1][1];
-                    endBottomRight = ProfilePoints[1][4];
+                    endTopLeft = ProfilePoints[1][2];
+                    endBottomRight = ProfilePoints[1][1];
                     endTopRight = ProfilePoints[1][3];
                     normal = Utility.GetVectorFromTwoPoints(bottomLeft, endBottomLeft).GetNormal();
                     bottomLine = new Line(bottomLeft, endBottomLeft);
@@ -919,38 +1027,38 @@ namespace ZeroTouchTekla.Profiles
                     break;
                 case 2:
                     bottomLeft = ProfilePoints[1][0];
-                    topLeft = ProfilePoints[1][1];
+                    topLeft = ProfilePoints[1][2];
                     bottomRight = ProfilePoints[0][0];
-                    topRight = ProfilePoints[0][1];
-                    endBottomLeft = ProfilePoints[1][4];
+                    topRight = ProfilePoints[0][2];
+                    endBottomLeft = ProfilePoints[1][1];
                     endTopLeft = ProfilePoints[1][3];
-                    endBottomRight = ProfilePoints[0][4];
+                    endBottomRight = ProfilePoints[0][1];
                     endTopRight = ProfilePoints[0][3];
                     normal = Utility.GetVectorFromTwoPoints(bottomLeft, bottomRight).GetNormal();
                     bottomLine = new Line(bottomLeft, bottomRight);
                     topLine = new Line(topLeft, topRight);
                     break;
                 case 3:
-                    bottomLeft = ProfilePoints[0][4];
+                    bottomLeft = ProfilePoints[0][1];
                     topLeft = ProfilePoints[0][3];
-                    bottomRight = ProfilePoints[1][4];
+                    bottomRight = ProfilePoints[1][1];
                     topRight = ProfilePoints[1][3];
                     endBottomLeft = ProfilePoints[0][0];
-                    endTopLeft = ProfilePoints[0][1];
+                    endTopLeft = ProfilePoints[0][2];
                     endBottomRight = ProfilePoints[1][0];
-                    endTopRight = ProfilePoints[1][1];
+                    endTopRight = ProfilePoints[1][2];
                     normal = Utility.GetVectorFromTwoPoints(bottomLeft, bottomRight).GetNormal();
                     bottomLine = new Line(bottomLeft, bottomRight);
                     topLine = new Line(topLeft, topRight);
                     break;
                 default:
                     bottomLeft = ProfilePoints[1][0];
-                    topLeft = ProfilePoints[1][1];
-                    bottomRight = ProfilePoints[1][4];
+                    topLeft = ProfilePoints[1][2];
+                    bottomRight = ProfilePoints[1][1];
                     topRight = ProfilePoints[1][3];
                     endBottomLeft = ProfilePoints[0][0];
-                    endTopLeft = ProfilePoints[0][1];
-                    endBottomRight = ProfilePoints[0][4];
+                    endTopLeft = ProfilePoints[0][2];
+                    endBottomRight = ProfilePoints[0][1];
                     endTopRight = ProfilePoints[0][3];
                     normal = Utility.GetVectorFromTwoPoints(bottomLeft, endBottomLeft).GetNormal();
                     bottomLine = new Line(bottomLeft, endBottomLeft);
@@ -989,8 +1097,8 @@ namespace ZeroTouchTekla.Profiles
             });
             guideline.Spacing.StartOffset = 100;
             guideline.Spacing.EndOffset = Convert.ToDouble(spacing) / 2.0;
-            
-            GeometricPlane geometricPlane = new GeometricPlane(bottomLeft, normal);        
+
+            GeometricPlane geometricPlane = new GeometricPlane(bottomLeft, normal);
 
             Point startGL = Utility.GetExtendedIntersection(bottomLine, geometricPlane, 2);
             Point endGL = Utility.GetExtendedIntersection(topLine, geometricPlane, 2);
@@ -1023,6 +1131,6 @@ namespace ZeroTouchTekla.Profiles
             LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
         }
         #endregion
-       
+
     }
 }
