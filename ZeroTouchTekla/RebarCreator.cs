@@ -184,7 +184,7 @@ namespace ZeroTouchTekla
                             element = new RTW(beam);
                             break;
                         case Element.ProfileType.RCLMN:
-                            element = new CLMN(beam);
+                            element = new RCLMN(beam);
                             break;
                         default:
                             throw new Exception("Profile type doesn't match");

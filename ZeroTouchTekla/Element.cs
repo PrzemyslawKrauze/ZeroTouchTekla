@@ -61,7 +61,7 @@ namespace ZeroTouchTekla
         }
         public static Face[] GetPartEndFaces(Part part)
         {
-            Solid soild = part.GetSolid();
+            Solid soild = part.GetSolid(Solid.SolidCreationTypeEnum.NORMAL_WITHOUT_EDGECHAMFERS);
             FaceEnumerator faceEnumerator = soild.GetFaceEnumerator();
             List<Face> faces = GetFacesFromFaceEnumerator(faceEnumerator);
             double maxVertex = 0;
@@ -162,6 +162,7 @@ namespace ZeroTouchTekla
         private Dictionary<string, double> profileParameters = new Dictionary<string, double>();
         private Dictionary<int, int[]> layerDictionary = new Dictionary<int, int[]>();
         private Part[] baseParts;
+        List<RebarLegFace> rebarLegFaces = new List<RebarLegFace>();
         //Constructors
         public static Element Create(params Part[] parts)
         {
@@ -191,7 +192,7 @@ namespace ZeroTouchTekla
                     element = new RTWS(parts);
                     break;
                 case ProfileType.RCLMN:
-                    element = new CLMN(parts);
+                    element = new RCLMN(parts);
                     break;
                 case ProfileType.ABT:
                     element = new ABT(parts);
@@ -250,6 +251,8 @@ namespace ZeroTouchTekla
         protected Part[] BaseParts { get => baseParts; set => baseParts = value; }
         public List<List<Point>> ProfilePoints { get => profilePoints; set => profilePoints = value; }
         protected Dictionary<string, double> ProfileParameters { get => profileParameters; set => profileParameters = value; }
+        public List<RebarLegFace> RebarLegFaces { get => rebarLegFaces; set => rebarLegFaces = value; }
+
         public double SideCover = 0;
         public double BottomCover = 0;
         public double TopCover = 0;
@@ -273,8 +276,15 @@ namespace ZeroTouchTekla
         //Abstract methods
         public abstract void Create();
         public abstract void CreateSingle(string barName);
-        //Public methods
-        public void SetLocalPlane()
+        //Protected methods
+        protected RebarLegFace GetRebarLegFace(int number)
+        {
+            RebarLegFace faceToCopy = RebarLegFaces[number];
+            RebarLegFace rebarLegFace = new RebarLegFace();
+            rebarLegFace.Contour = faceToCopy.Contour;
+            return rebarLegFace;
+        }
+        protected void SetLocalPlane()
         {
             Model model = new Model();
             TransformationPlane localPlane = new TransformationPlane(BaseParts.FirstOrDefault().GetCoordinateSystem());

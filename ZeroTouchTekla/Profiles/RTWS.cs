@@ -9,6 +9,19 @@ namespace ZeroTouchTekla.Profiles
 {
     public class RTWS : Element
     {
+        /*
+       3-------4
+       |       |
+       |       |   
+        2--1   |
+           |   5
+           |    \
+           |     \
+           |      6
+           |      |
+           |      | 
+           0------7
+       */
         #region Fields
         enum RebarType
         {
