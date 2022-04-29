@@ -61,11 +61,11 @@ namespace ZeroTouchTekla
         }
         public static Face[] GetPartEndFaces(Part part)
         {
-            Solid soild = part.GetSolid(Solid.SolidCreationTypeEnum.NORMAL_WITHOUT_EDGECHAMFERS);
+            Solid soild = part.GetSolid(Solid.SolidCreationTypeEnum.RAW);
             FaceEnumerator faceEnumerator = soild.GetFaceEnumerator();
             List<Face> faces = GetFacesFromFaceEnumerator(faceEnumerator);
             double maxVertex = 0;
-            double minVertex = 0;
+            double minVertex = Double.MaxValue;
             Face startFace = null;
             Face endFace = null;
             for (int i = 0; i < faces.Count; i++)
@@ -113,11 +113,11 @@ namespace ZeroTouchTekla
         public static List<List<Point>> SortPoints(List<List<Point>> pointsList)
         {
             List<List<Point>> sortedPoints = new List<List<Point>>();
-            foreach(List<Point> points in pointsList)
+            foreach (List<Point> points in pointsList)
             {
                 List<Point> sortedList = (from Point p in points
-                                 orderby p.X, p.Y, p.Z ascending
-                                 select p).ToList();
+                                          orderby p.X, p.Y, p.Z ascending
+                                          select p).ToList();
                 sortedPoints.Add(sortedList);
             }
             return sortedPoints;
@@ -149,6 +149,20 @@ namespace ZeroTouchTekla
             List<List<Point>> points = TeklaUtils.GetPointsFromFaces(faces);
             points = TeklaUtils.SortPoints(points);
             return points;
+        }
+        public static List<List<Point>> GetSortedPointsFromParts(Part[] parts)
+        {
+            List<List<Point>> sortedPoints = new List<List<Point>>();
+            for (int i = 0; i < parts.Count(); i++)
+            {
+                List<List<Point>> points = GetSortedPointsFromPart(parts[i]);
+                if(i==0)
+                {
+                    sortedPoints.Add(points.First());
+                }
+                sortedPoints.Add(points.Last());
+            }
+            return sortedPoints;
         }
     }
     public abstract class Element
@@ -365,7 +379,7 @@ namespace ZeroTouchTekla
         }
 
         List<RebarLegFace> rebarLegFaces;
-       
+
     }
 
 }

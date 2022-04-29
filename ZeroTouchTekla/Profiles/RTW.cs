@@ -11,8 +11,7 @@ using System.Reflection;
 namespace ZeroTouchTekla.Profiles
 {
     public class RTW : Element
-    {
-       
+    {       
         #region Fields
         enum RebarType
         {

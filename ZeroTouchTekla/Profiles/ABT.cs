@@ -12,9 +12,14 @@ namespace ZeroTouchTekla.Profiles
         #region Constructor
         public ABT(params Part[] parts) : base()
         {
-            List<Part> partList = new List<Part>(parts);
+            base.BaseParts = parts;
             SetLocalPlane();
-            GetProfilePointsAndParameters(partList);
+            SetFirstProfileParameters(parts[0]);
+            for (int i = 1; i < parts.Count(); i++)
+            {
+                SetNextProfileParameters(parts[i]);
+            }
+            SetProfilePoints(parts);
         }
         public override void Create()
         {
@@ -70,6 +75,71 @@ namespace ZeroTouchTekla.Profiles
             for (int i = 1; i < parts.Count; i++)
             {
                 NextBeamProperties(parts[i], i);
+            }
+        }
+         void SetProfilePoints(Part[] parts)
+        {
+            base.ProfilePoints = TeklaUtils.GetSortedPointsFromParts(parts);
+        }
+        void SetFirstProfileParameters(Part part)
+        {
+            Beam beam = part as Beam;
+            string[] profileValues = GetProfileValues(beam);
+            Width = Convert.ToDouble(profileValues[0]);
+            Height.Add(Convert.ToDouble(profileValues[1]));
+            FrontHeight.Add(Convert.ToDouble(profileValues[2]));
+            ShelfHeight = Convert.ToDouble(profileValues[3]);
+            ShelfWidth = Convert.ToDouble(profileValues[4]);
+            BackwallWidth = Convert.ToDouble(profileValues[5]);
+            CantileverWidth = Convert.ToDouble(profileValues[6]);
+            BackwallTopHeight.Add(Convert.ToDouble(profileValues[7]));
+            CantileverHeight = Convert.ToDouble(profileValues[8]);
+            BackwallBottomHeight.Add(Convert.ToDouble(profileValues[9]));
+            SkewHeight = Convert.ToDouble(profileValues[10]);
+            FullWidth = ShelfWidth + BackwallWidth + CantileverWidth;
+            Length.Add(Distance.PointToPoint(beam.StartPoint, beam.EndPoint));
+            FullLength += Length.Last();
+            HorizontalOffset = 0;
+            string firstProfileName = beam.Profile.ProfileString;
+
+            if (firstProfileName.Contains("V"))
+            {
+                Height.Add(Convert.ToDouble(profileValues[11]));
+                FrontHeight.Add(Convert.ToDouble(profileValues[12]));
+                BackwallTopHeight.Add(Convert.ToDouble(profileValues[13]));
+                BackwallBottomHeight.Add(Convert.ToDouble(profileValues[14]));
+                HorizontalOffset = Convert.ToDouble(profileValues[15]);
+            }
+            else
+            {
+                Height.Add(Height[0]);
+                FrontHeight.Add(FrontHeight[0]);
+                BackwallTopHeight.Add(BackwallTopHeight.Last());
+                BackwallBottomHeight.Add(BackwallBottomHeight[0]);
+                HorizontalOffset = Convert.ToDouble(profileValues[11]);
+            }
+        }
+         void SetNextProfileParameters(Part part)
+        {
+            Beam nextBeam = part as Beam;
+            string[] secondProfileValues = GetProfileValues(nextBeam);
+            string nextProfileName = nextBeam.Profile.ProfileString;
+            Length.Add(Distance.PointToPoint(nextBeam.StartPoint, nextBeam.EndPoint));
+            FullLength += Length.Last();
+
+            if (nextProfileName.Contains("V"))
+            {
+                Height.Add(Convert.ToDouble(secondProfileValues[11]));
+                FrontHeight.Add(Convert.ToDouble(secondProfileValues[12]));
+                BackwallTopHeight.Add(Convert.ToDouble(secondProfileValues[13]));
+                BackwallBottomHeight.Add(Convert.ToDouble(secondProfileValues[14]));
+            }
+            else
+            {
+                Height.Add(Height.Last());
+                FrontHeight.Add(FrontHeight.Last());
+                BackwallTopHeight.Add(BackwallTopHeight.Last());
+                BackwallBottomHeight.Add(BackwallBottomHeight.Last());
             }
         }
         public void FirstBeamProperties(Part part)
@@ -196,150 +266,7 @@ namespace ZeroTouchTekla.Profiles
                 }
             }
             ProfilePoints.Add(nextProfile);
-        }
-        /*
-        public void SecondBeamProperties(Part part)
-        {
-            Beam secondBeam = part as Beam;
-            string[] secondProfileValues = GetProfileValues(secondBeam);
-            string secondProfileName = secondBeam.Profile.ProfileString;
-            Length2 = Distance.PointToPoint(secondBeam.StartPoint, secondBeam.EndPoint);
-            FullLength = Length + Length2;
-
-            if (secondProfileName.Contains("V"))
-            {
-                Height3 = Convert.ToDouble(secondProfileValues[11]);
-                FrontHeight3 = Convert.ToDouble(secondProfileValues[12]);
-                BackwallTopHeight3 = Convert.ToDouble(secondProfileValues[13]);
-                BackwallBottomHeight3 = Convert.ToDouble(secondProfileValues[14]);
-            }
-            else
-            {
-                Height3 = Height;
-                FrontHeight3 = FrontHeight;
-                BackwallTopHeight3 = BackwallTopHeight;
-                BackwallBottomHeight3 = BackwallBottomHeight;
-            }
-
-            double distanceToMid = Height > Height2 ? Height / 2.0 : Height2 / 2.0;
-
-            Point n0 = new Point(FullLength, -distanceToMid, FullWidth / 2.0);
-            Point n1 = new Point(FullLength, n0.Y + FrontHeight3, n0.Z);
-            Point n2 = new Point(FullLength, n1.Y + ShelfHeight, n1.Z - ShelfWidth);
-            Point n3 = new Point(FullLength, -distanceToMid + Height3, n2.Z);
-            Point n4 = new Point(FullLength, n3.Y, n3.Z - BackwallWidth);
-            Point n5 = new Point(FullLength, n4.Y - BackwallTopHeight3, n4.Z);
-            Point n6 = new Point(FullLength, n5.Y - CantileverHeight, n5.Z - CantileverWidth);
-            Point n7 = new Point(FullLength, n6.Y - BackwallBottomHeight3, n6.Z);
-            Point n8 = new Point(FullLength, n7.Y - SkewHeight, FullWidth / 2.0 - Width);
-            Point n9 = new Point(FullLength, -distanceToMid, FullWidth / 2.0 - Width);
-            List<Point> thirdProfile = new List<Point> { n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 };
-
-            if (HorizontalOffset != 0)
-            {
-                foreach (Point p in thirdProfile)
-                {
-                    p.Translate(0, 0, -HorizontalOffset * 1.5);
-                }
-            }
-            ProfilePoints.Add(thirdProfile);
-
-        }
-        public void ThirdBeamProperties(Part part)
-        {
-            Beam thirdBeam = part as Beam;
-            string[] thirdProfileValues = GetProfileValues(thirdBeam);
-            string thirdProfileName = thirdBeam.Profile.ProfileString;
-            Length3 = Distance.PointToPoint(thirdBeam.StartPoint, thirdBeam.EndPoint);
-            FullLength = Length + Length2 + Length3;
-
-
-            if (thirdProfileName.Contains("V"))
-            {
-                Height4 = Convert.ToDouble(thirdProfileValues[11]);
-                FrontHeight4 = Convert.ToDouble(thirdProfileValues[12]);
-                BackwallTopHeight4 = Convert.ToDouble(thirdProfileValues[13]);
-                BackwallBottomHeight4 = Convert.ToDouble(thirdProfileValues[14]);
-            }
-            else
-            {
-                Height4 = Height;
-                FrontHeight4 = FrontHeight;
-                BackwallTopHeight4 = BackwallTopHeight;
-                BackwallBottomHeight4 = BackwallBottomHeight;
-            }
-
-            double distanceToMid = Height > Height2 ? Height / 2.0 : Height2 / 2.0;
-
-            Point n0 = new Point(FullLength, -distanceToMid, FullWidth / 2.0);
-            Point n1 = new Point(FullLength, n0.Y + FrontHeight4, n0.Z);
-            Point n2 = new Point(FullLength, n1.Y + ShelfHeight, n1.Z - ShelfWidth);
-            Point n3 = new Point(FullLength, -distanceToMid + Height4, n2.Z);
-            Point n4 = new Point(FullLength, n3.Y, n3.Z - BackwallWidth);
-            Point n5 = new Point(FullLength, n4.Y - BackwallTopHeight4, n4.Z);
-            Point n6 = new Point(FullLength, n5.Y - CantileverHeight, n5.Z - CantileverWidth);
-            Point n7 = new Point(FullLength, n6.Y - BackwallBottomHeight4, n6.Z);
-            Point n8 = new Point(FullLength, n7.Y - SkewHeight, FullWidth / 2.0 - Width);
-            Point n9 = new Point(FullLength, -distanceToMid, FullWidth / 2.0 - Width);
-            List<Point> fourthProfile = new List<Point> { n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 };
-
-            if (HorizontalOffset != 0)
-            {
-                foreach (Point p in fourthProfile)
-                {
-                    p.Translate(0, 0, -HorizontalOffset * 2.5);
-                }
-            }
-            ProfilePoints.Add(fourthProfile);
-        }
-        public void FourthBeamProperties(Part part)
-        {
-            Beam forthBeam = part as Beam;
-            string[] thirdProfileValues = GetProfileValues(forthBeam);
-            string thirdProfileName = forthBeam.Profile.ProfileString;
-            Length4 = Distance.PointToPoint(forthBeam.StartPoint, forthBeam.EndPoint);
-            FullLength = Length + Length2 + Length3+Length4;
-
-
-            if (thirdProfileName.Contains("V"))
-            {
-                Height5 = Convert.ToDouble(thirdProfileValues[11]);
-                FrontHeight5 = Convert.ToDouble(thirdProfileValues[12]);
-                BackwallTopHeight5 = Convert.ToDouble(thirdProfileValues[13]);
-                BackwallBottomHeight5 = Convert.ToDouble(thirdProfileValues[14]);
-            }
-            else
-            {
-                Height5 = Height;
-                FrontHeight5 = FrontHeight;
-                BackwallTopHeight5 = BackwallTopHeight;
-                BackwallBottomHeight5 = BackwallBottomHeight;
-            }
-
-            double distanceToMid = Height > Height2 ? Height / 2.0 : Height2 / 2.0;
-
-            Point n0 = new Point(FullLength, -distanceToMid, FullWidth / 2.0);
-            Point n1 = new Point(FullLength, n0.Y + FrontHeight5, n0.Z);
-            Point n2 = new Point(FullLength, n1.Y + ShelfHeight, n1.Z - ShelfWidth);
-            Point n3 = new Point(FullLength, -distanceToMid + Height5, n2.Z);
-            Point n4 = new Point(FullLength, n3.Y, n3.Z - BackwallWidth);
-            Point n5 = new Point(FullLength, n4.Y - BackwallTopHeight5, n4.Z);
-            Point n6 = new Point(FullLength, n5.Y - CantileverHeight, n5.Z - CantileverWidth);
-            Point n7 = new Point(FullLength, n6.Y - BackwallBottomHeight5, n6.Z);
-            Point n8 = new Point(FullLength, n7.Y - SkewHeight, FullWidth / 2.0 - Width);
-            Point n9 = new Point(FullLength, -distanceToMid, FullWidth / 2.0 - Width);
-            List<Point> fifthProfile = new List<Point> { n0, n1, n2, n3, n4, n5, n6, n7, n8, n9 };
-
-            if (HorizontalOffset != 0)
-            {
-                foreach (Point p in fifthProfile)
-                {
-                    p.Translate(0, 0, -HorizontalOffset * 3.5);
-                }
-            }
-            ProfilePoints.Add(fifthProfile);
-        }
-        */
+        }   
         #endregion
         #region PrivateMethods   
         void OuterVerticalRebar()
