@@ -103,7 +103,7 @@ namespace ZeroTouchTekla
         }
         private void SetProfilePoints(Part[] parts)
         {
-            base.ProfilePoints = TeklaUtils.GetSortedPointsFromParts(parts);
+            base.ProfilePoints = TeklaUtils.GetSortedPointsFromEndFaces(parts);
         }
         void FirstBeamProperties(Part part)
         {

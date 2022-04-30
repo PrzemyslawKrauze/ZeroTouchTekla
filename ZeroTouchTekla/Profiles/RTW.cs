@@ -87,7 +87,7 @@ namespace ZeroTouchTekla.Profiles
         }
         private void SetProfilePoints(Part part)
         {
-            base.ProfilePoints = TeklaUtils.GetSortedPointsFromPart(part);
+            base.ProfilePoints = TeklaUtils.GetSortedPointsFromEndFaces(part);
         }
         private void SetProfilePoints()
         {

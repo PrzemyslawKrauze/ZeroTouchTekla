@@ -29,7 +29,7 @@ namespace ZeroTouchTekla.Profiles
         #region PublicMethods
         private void SetProfilePoints(Part[] parts)
         {
-            base.ProfilePoints = TeklaUtils.GetSortedPointsFromParts(parts);
+            base.ProfilePoints = TeklaUtils.GetSortedPointsFromEndFaces(parts);
         }
         void SetProfileParameters(Part[] parts)
         {

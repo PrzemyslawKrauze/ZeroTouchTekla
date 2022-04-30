@@ -110,15 +110,19 @@ namespace ZeroTouchTekla
             }
             return pointLists;
         }
+        public static List<Point> SortPoints(List<Point> points)
+        {
+            List<Point> sortedList = (from Point p in points
+                                      orderby Math.Round(p.X) , Math.Round(p.Y), Math.Round(p.Z) ascending
+                                      select p).ToList();
+            return sortedList;
+        }
         public static List<List<Point>> SortPoints(List<List<Point>> pointsList)
         {
             List<List<Point>> sortedPoints = new List<List<Point>>();
             foreach (List<Point> points in pointsList)
             {
-                List<Point> sortedList = (from Point p in points
-                                          orderby p.X, p.Y, p.Z ascending
-                                          select p).ToList();
-                sortedPoints.Add(sortedList);
+                sortedPoints.Add(SortPoints(points));
             }
             return sortedPoints;
         }
@@ -143,26 +147,76 @@ namespace ZeroTouchTekla
             }
             return points;
         }
-        public static List<List<Point>> GetSortedPointsFromPart(Part part)
+        public static List<List<Point>> GetSortedPointsFromEndFaces(Part part)
         {
             Face[] faces = TeklaUtils.GetPartEndFaces(part);
             List<List<Point>> points = TeklaUtils.GetPointsFromFaces(faces);
             points = TeklaUtils.SortPoints(points);
             return points;
         }
-        public static List<List<Point>> GetSortedPointsFromParts(Part[] parts)
+        public static List<List<Point>> GetSortedPointsFromEndFaces(Part[] parts)
         {
             List<List<Point>> sortedPoints = new List<List<Point>>();
             for (int i = 0; i < parts.Count(); i++)
             {
-                List<List<Point>> points = GetSortedPointsFromPart(parts[i]);
-                if(i==0)
+                List<List<Point>> points = GetSortedPointsFromEndFaces(parts[i]);
+                if (i == 0)
                 {
                     sortedPoints.Add(points.First());
                 }
                 sortedPoints.Add(points.Last());
             }
             return sortedPoints;
+        }
+        public static List<List<Point>> GetSortedPointsFromPart(Part part)
+        {
+            Solid soild = part.GetSolid(Solid.SolidCreationTypeEnum.NORMAL_WITHOUT_EDGECHAMFERS);
+            FaceEnumerator faceEnumerator = soild.GetFaceEnumerator();
+            List<Face> faces = GetFacesFromFaceEnumerator(faceEnumerator);
+            Face[] faceArray = faces.ToArray();
+            List<List<Point>> facePoints = GetPointsFromFaces(faceArray);
+            List<Point> unsortedPoints = new List<Point>();
+            foreach (List<Point> point in facePoints)
+            {
+                unsortedPoints.AddRange(point);
+            }
+            unsortedPoints = RemoveDuplicatedPoints(unsortedPoints);
+            List<List<Point>> sortedPoints = new List<List<Point>>();
+            double currentXValue = Double.MinValue;
+            List<Point> currentList = new List<Point>();
+            for (int i = 0; i < unsortedPoints.Count; i++)
+            {
+                if (Math.Abs(unsortedPoints[i].X -currentXValue)<1)
+                {
+                    currentList.Add(unsortedPoints[i]);
+                }
+                else
+                {
+                    currentXValue = unsortedPoints[i].X;
+                    if (i != 0)
+                    {
+                        sortedPoints.Add(currentList);
+                        currentList = new List<Point>();
+                    }
+                    currentList.Add(unsortedPoints[i]);
+
+                }
+            }
+            sortedPoints.Add(currentList);
+            return sortedPoints;
+        }
+        public static List<Point> RemoveDuplicatedPoints(List<Point> pointList)
+        {
+            pointList = SortPoints(pointList);
+            for (int i = 0; i < pointList.Count - 1; i++)
+            {
+                if (Distance.PointToPoint(pointList[i], pointList[i + 1]) <= 1)
+                {
+                    pointList.RemoveAt(i);
+                    i--;
+                }
+            }
+            return pointList;
         }
     }
     public abstract class Element

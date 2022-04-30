@@ -63,6 +63,7 @@ namespace ZeroTouchTekla
         }
         static Part[] PickParts()
         {
+            
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             ModelObjectEnumerator modelObjects = picker.PickObjects(Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS, "Pick parts");
 
@@ -84,7 +85,7 @@ namespace ZeroTouchTekla
             ModelObject modelObject = picker.PickObject(pickObjectEnum);
             try
             {
-                Beam part = modelObject as Beam;
+                Part part = modelObject as Part;
                 FatherID = part.Identifier.ID;
                 if (part != null)
                 {
