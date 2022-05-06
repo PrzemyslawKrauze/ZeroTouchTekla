@@ -232,7 +232,7 @@ namespace ZeroTouchTekla
         private Part[] baseParts;
         List<RebarLegFace> rebarLegFaces = new List<RebarLegFace>();
         //Constructors
-        public static Element Create(params Part[] parts)
+        public static Element Initialize(params Part[] parts)
         {
             string partName = parts[0].Profile.ProfileString;
 
@@ -273,9 +273,6 @@ namespace ZeroTouchTekla
             }
             element.SetCover(parts[0]);
 
-            element.Create();
-
-
             return element;
         }
         protected Element() { }
@@ -315,15 +312,16 @@ namespace ZeroTouchTekla
             WING,
             APS
         }
+
         public Dictionary<int, int[]> LayerDictionary { get => layerDictionary; }
         protected Part[] BaseParts { get => baseParts; set => baseParts = value; }
         public List<List<Point>> ProfilePoints { get => profilePoints; set => profilePoints = value; }
         protected Dictionary<string, double> ProfileParameters { get => profileParameters; set => profileParameters = value; }
         public List<RebarLegFace> RebarLegFaces { get => rebarLegFaces; set => rebarLegFaces = value; }
 
-        public double SideCover = 0;
-        public double BottomCover = 0;
-        public double TopCover = 0;
+        protected double SideCover = 0;
+        protected double BottomCover = 0;
+        protected double TopCover = 0;
         public ElementFace ElementFace;
         //Initialization methods
         protected void SetCover(Part beam)
@@ -379,6 +377,17 @@ namespace ZeroTouchTekla
             string diameter = rebarSet.RebarProperties.Size;
             rebarSet.SetUserProperty("__MIN_BAR_LENTYPE", 0);
             rebarSet.SetUserProperty("__MIN_BAR_LENGTH", RebarCreator.MinLengthCoefficient * Convert.ToDouble(diameter));
+        }
+        protected static RebarSet CreateDefaultRebarSet(string name, int rebarSize)
+        {
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = name;
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(rebarSize);
+            rebarSet.RebarProperties.Size = rebarSize.ToString();
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(rebarSize);
+            rebarSet.LayerOrderNumber = 1;
+            return rebarSet;
         }
     }
     public class ElementFace

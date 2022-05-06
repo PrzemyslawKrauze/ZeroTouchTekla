@@ -47,14 +47,7 @@ namespace ZeroTouchTekla
                 ExcelUtility excelUtility = new ExcelUtility(Program.ExcelPath);
 
                 Program.ExcelDictionary = excelUtility.ReadExcelAndCreateDictionary(3, 4, Program.SheetName);
-                excelUtility.SaveAndDispose();
-                /*
-                catch
-                {
-                    MessageBox.Show("Cannot load excel", "Error");
-
-                }
-                */
+                excelUtility.SaveAndDispose();               
             }
             else
             {
@@ -62,12 +55,6 @@ namespace ZeroTouchTekla
             }
 
         }
-
-        private void OnFootingRebarClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.FTG);
-        }
-
         private void OnCopySpacingClick(object sender, EventArgs e)
         {
             Utility.CopyGuideLine();
@@ -77,51 +64,19 @@ namespace ZeroTouchTekla
         {
             RebarCreator.RecreateRebar();
         }
-
-        private void OnRTWButtonClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.RTW);
-        }
-
         private void OnTestButtonClick(object sender, EventArgs e)
         {
             RebarCreator.Test();
 
         }
-
-        private void OnCollumnButtonClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.RCLMN);
-        }
-
-        private void OnDoubleRTWButtonClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.DRTW);
-        }
-
-        private void OnRetainingWallStepButtonClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.RTWS);
-        }
-
-        private void OnAbutmentButtonClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.ABT);
-        }
-
+ 
         private void OnWingButtonClick(object sender, EventArgs e)
         {
             RebarCreator.CreateForComponent(Element.ProfileType.WING);
         }
-
-        private void OnTripledAbutmentButtonClick(object sender, EventArgs e)
+        private void ForPartButton_Click(object sender, EventArgs e)
         {
-            RebarCreator.CreateForPart(Element.ProfileType.TABT);
-        }
-
-        private void OnAPSButtonClick(object sender, EventArgs e)
-        {
-            RebarCreator.CreateForPart(Element.ProfileType.APS);
+            RebarCreator.CreateForPart();
         }
     }
 }

@@ -46,21 +46,7 @@ namespace ZeroTouchTekla
             //Restore user's plane
             Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
             Program.ActiveModel.CommitChanges();
-        }
-        public static void CreateForPart(Element.ProfileType profileType)
-        {
-            //Store current work plane
-            TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
-            Part[] pickedParts = PickParts();
-            Element element = Element.Create(pickedParts);
-
-            //Restore user work plane
-            Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
-            Program.ActiveModel.CommitChanges();
-
-            ChangeLayer(Program.ActiveModel, element);
-            ChangeLayer(Program.ActiveModel, element);
-        }
+        } 
         static Part[] PickParts()
         {
             
@@ -75,6 +61,22 @@ namespace ZeroTouchTekla
                 parts[i] = modelObjects.Current as Part;
             }
             return parts;
+        }
+        public static void CreateForPart()
+        {
+            //Store current work plane
+            TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+            Part[] pickedParts = PickParts();
+            FatherID = pickedParts[0].Identifier.ID;
+            Element element = Element.Initialize(pickedParts);
+            element.Create();
+
+            //Restore user work plane
+            Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+            Program.ActiveModel.CommitChanges();
+
+            ChangeLayer(Program.ActiveModel, element);
+            ChangeLayer(Program.ActiveModel, element);
         }
         public static void CreateForComponent(Element.ProfileType profileType)
         {
@@ -118,16 +120,14 @@ namespace ZeroTouchTekla
         }
         public static void RecreateRebar()
         {
-
-            Tekla.Structures.Model.UI.Picker partPicker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum partPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_PART;
+            Part[] pickedParts = PickParts();
 
             Tekla.Structures.Model.UI.Picker rebarPicker = new Tekla.Structures.Model.UI.Picker();
             Tekla.Structures.Model.UI.Picker.PickObjectEnum rebarPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_REINFORCEMENT;
 
             try
             {
-                Beam beam = partPicker.PickObject(partPickObjectEnum) as Beam;
+                Part beam = pickedParts[0];
 
                 RebarSet rebarSet = rebarPicker.PickObject(rebarPickObjectEnum) as RebarSet;
                 rebarSet.GetUserProperty(RebarCreator.FATHER_ID_NAME, ref FatherID);
@@ -140,7 +140,6 @@ namespace ZeroTouchTekla
                     Type[] Types = new Type[] { typeof(RebarSet) };
                     ModelObjectEnumerator moe = Program.ActiveModel.GetModelObjectSelector().GetAllObjectsWithType(Types);
                     var rebarList = Utility.ToList(moe);
-
 
                     List<RebarSet> selectedRebars = (from RebarSet r in rebarList
                                                      where Utility.GetUserProperty(r, FATHER_ID_NAME) == beam.Identifier.ID
@@ -168,28 +167,13 @@ namespace ZeroTouchTekla
                     }
                     Program.ActiveModel.CommitChanges();
 
-                    // RebarCreator rebarCreator = new RebarCreator();
                     //Store current work plane
                     TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
                     //Get beam local plane
                     TransformationPlane localPlane = new TransformationPlane(beam.GetCoordinateSystem());
                     Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
 
-                    Element element;
-                    switch (profileType)
-                    {
-                        case Element.ProfileType.FTG:
-                            element = new FTG(beam);
-                            break;
-                        case Element.ProfileType.RTW:
-                            element = new RTW(beam);
-                            break;
-                        case Element.ProfileType.RCLMN:
-                            element = new RCLMN(beam);
-                            break;
-                        default:
-                            throw new Exception("Profile type doesn't match");
-                    }
+                    Element element = Element.Initialize(pickedParts);
 
                     element.CreateSingle(rebarName);
                     //Restore user work plane
@@ -240,8 +224,6 @@ namespace ZeroTouchTekla
                 }
             }
         }
-
-
 
         public static int FatherID;
 

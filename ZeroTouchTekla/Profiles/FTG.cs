@@ -17,14 +17,15 @@ namespace ZeroTouchTekla.Profiles
     public class FTG : Element
     {
         #region Fields
-        public enum RebarType
+        enum RebarType
         {
             FS,
             S,
             TPR,
             BPR,
             BLR,
-            TLR,
+            TLLR,
+            TLRR,
             CCSR,
             CLR
         }
@@ -204,8 +205,10 @@ namespace ZeroTouchTekla.Profiles
                 case RebarType.BLR:
                     BottomLongitudinalRebar();
                     break;
-                case RebarType.TLR:
+                case RebarType.TLLR:
                     TopLongitudinalLeftRebar();
+                    break;
+                case RebarType.TLRR:
                     TopLongitudinalRightRebar();
                     break;
                 case RebarType.CCSR:
@@ -224,7 +227,7 @@ namespace ZeroTouchTekla.Profiles
         #region PrivateMethods
         void FullStirrups()
         {
-            string rebarSize = Program.ExcelDictionary["S_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["S_Diameter"]);
             double rowSpacing = Convert.ToDouble(Program.ExcelDictionary["S_RowSpacing"]) + Convert.ToDouble(rebarSize) / 2.0;
             double barSpacing = Convert.ToDouble(Program.ExcelDictionary["S_BarSpacing"]) - Convert.ToDouble(rebarSize) / 2.0;
             int stirrupSpacing = Convert.ToInt32(Program.ExcelDictionary["S_StirrupSpacing"]);
@@ -239,13 +242,8 @@ namespace ZeroTouchTekla.Profiles
 
             for (int i = 0; i < numberOfStirrupSets; i++)
             {
-                var rebarSet = new RebarSet();
-                rebarSet.RebarProperties.Name = "FTG_FS";
-                rebarSet.RebarProperties.Grade = "B500SP";
-                rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-                rebarSet.RebarProperties.Size = rebarSize;
-                rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-                rebarSet.LayerOrderNumber = 1;
+                string name = CreateRebarName(RebarType.FS);
+                var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
                 List<List<Point>> correctedPoints = new List<List<Point>>();
                 double additionalOffset = (leftover / 2.0 + i * (barSpacing + stirrupSpacing));
@@ -385,7 +383,7 @@ namespace ZeroTouchTekla.Profiles
         }
         void Stirrups()
         {
-            string rebarSize = Program.ExcelDictionary["S_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["S_Diameter"]);
             int rowSpacing = Convert.ToInt32(Program.ExcelDictionary["S_RowSpacing"]);
             int barSpacing = Convert.ToInt32(Program.ExcelDictionary["S_BarSpacing"]);
 
@@ -395,13 +393,8 @@ namespace ZeroTouchTekla.Profiles
 
             for (int i = 0; i < numberOfStirrupSets; i++)
             {
-                var rebarSet = new RebarSet();
-                rebarSet.RebarProperties.Name = "FTG_S";
-                rebarSet.RebarProperties.Grade = "B500SP";
-                rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-                rebarSet.RebarProperties.Size = rebarSize;
-                rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-                rebarSet.LayerOrderNumber = 1;
+                string name = CreateRebarName(RebarType.S);
+                var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
                 Point startMidPoint = new Point(ProfilePoints[0][0].X, ProfilePoints[0][0].Y, ProfilePoints[0][4].Z);
                 Point endMidPoint = new Point(ProfilePoints[1][0].X, ProfilePoints[1][0].Y, ProfilePoints[1][4].Z);
@@ -498,15 +491,11 @@ namespace ZeroTouchTekla.Profiles
         }
         void TopPerpendicularRebar()
         {
-            string rebarSize = Program.ExcelDictionary["TPR_Diameter"];
+            int rebarSize = Convert.ToInt32( Program.ExcelDictionary["TPR_Diameter"]);
             string spacing = Program.ExcelDictionary["TPR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_TPR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+
+            string name = CreateRebarName(RebarType.TPR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             var leftFace = GetRebarLegFace(1);
             rebarSet.LegFaces.Add(leftFace);
@@ -565,15 +554,11 @@ namespace ZeroTouchTekla.Profiles
         }
         void BottomPerpendicularRebar()
         {
-            string rebarSize = Program.ExcelDictionary["BPR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["BPR_Diameter"]);
             string spacing = Program.ExcelDictionary["BPR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_BPR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+
+            string name = CreateRebarName(RebarType.BPR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             var legFace1 = GetRebarLegFace(5);
             rebarSet.LegFaces.Add(legFace1);
@@ -667,15 +652,11 @@ namespace ZeroTouchTekla.Profiles
         }
         void BottomLongitudinalRebar()
         {
-            string rebarSize = Program.ExcelDictionary["BLR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["BLR_Diameter"]);
             string spacing = Program.ExcelDictionary["BLR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_BLR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 2;
+
+            string name = CreateRebarName(RebarType.BLR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             var legFace1 = GetRebarLegFace(5);
             rebarSet.LegFaces.Add(legFace1);
@@ -713,15 +694,11 @@ namespace ZeroTouchTekla.Profiles
         }
         void TopLongitudinalLeftRebar()
         {
-            string rebarSize = Program.ExcelDictionary["TLR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["TLR_Diameter"]);
             string spacing = Program.ExcelDictionary["TLR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_TLR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+
+            string name = CreateRebarName(RebarType.TLLR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             var legFace1 = GetRebarLegFace(2);
             rebarSet.LegFaces.Add(legFace1);
@@ -759,15 +736,11 @@ namespace ZeroTouchTekla.Profiles
         }
         void TopLongitudinalRightRebar()
         {
-            string rebarSize = Program.ExcelDictionary["TLR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["TLR_Diameter"]);
             string spacing = Program.ExcelDictionary["TLR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_TLR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+
+            string name = CreateRebarName(RebarType.TLRR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             var legFace1 = GetRebarLegFace(3);
             rebarSet.LegFaces.Add(legFace1);
@@ -806,15 +779,11 @@ namespace ZeroTouchTekla.Profiles
         void ClosingCShapeRebar(int faceNumber)
         {
             //1 - StartLeft, 2- StarRight, 3 - EndLeft, 4 -EndRight
-            string rebarSize = Program.ExcelDictionary["CR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["CR_Diameter"]);
             string spacing = Program.ExcelDictionary["CR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_CCSR_" + faceNumber;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+
+            string name = CreateRebarName(RebarType.CCSR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             Point bottomLeft, bottomRight;
             Point endBottomLeft, endTopLeft, endTopMid, endTopRight, endBottomRight;
@@ -913,15 +882,11 @@ namespace ZeroTouchTekla.Profiles
         void ClosingLongitudinalRebar(int faceNumber)
         {
             //1 - Start, 2- Left, 3 - Right, 4 - End
-            string rebarSize = Program.ExcelDictionary["CR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["CR_Diameter"]);
             string spacing = Program.ExcelDictionary["CR_Spacing"];
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "FTG_CLR_" + faceNumber;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+
+            string name = CreateRebarName(RebarType.CLR);
+            var rebarSet = CreateDefaultRebarSet(name, rebarSize);
 
             Point bottomLeft, topLeft, bottomRight, topRight;
             Point endBottomLeft, endTopLeft, endBottomRight, endTopRight;
@@ -1047,6 +1012,11 @@ namespace ZeroTouchTekla.Profiles
 
             PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
             LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2, 2, 2 });
+        }
+        string CreateRebarName(RebarType rebarType)
+        {
+            string name = "FTG_"+rebarType.ToString();
+            return name;
         }
         #endregion
 

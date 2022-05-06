@@ -698,19 +698,19 @@ namespace ZeroTouchTekla.Profiles
                         rs.GetUserProperty(RebarCreator.MethodInput, ref n3);
                         RTWSEditTopClosingCShapeRebar(rtws, rs, n3);
                         break;
-                        /*
+                        
                     case "ClosingLongitudinalRebar":
                         int n4 = 0;
                         rs.GetUserProperty(RebarCreator.MethodInput, ref n4);
                         RTWSEditClosingLongitudinalRebar(rtws, rs, n4);
-                        break;
+                        RTWSClosingLongitudinalRebarBottom();
+                        break;                        
                     case "BottomCShapeRebar":
                         RTWSEditBottomCShapeRebar(rtws, rs);
-                        break;
+                        break;                        
                     case "TopCShapeRebar":
                         RTWSEditTopCShapeRebar(rtws, rs);
-                        break;
-                    */
+                        break;                    
                 }
             }
         }
@@ -1162,6 +1162,32 @@ namespace ZeroTouchTekla.Profiles
 
             rebarSet.LegFaces = cRebarLegFaces;
 
+            ModelObjectEnumerator modelObjectEnumerator = rebarSet.GetRebarModifiers();
+            List<ModelObject> modelObjectList = Utility.ToList(modelObjectEnumerator);
+            List<RebarEndDetailModifier> rebarEndDetail = (from mo in modelObjectList
+                                                           where mo.GetType() == typeof(RebarEndDetailModifier)
+                                                           select mo as RebarEndDetailModifier).ToList();
+
+            if (rebarEndDetail.Count > 1)
+            {
+                var contour = new Contour();
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[0][5], null));
+                contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
+                contour.AddContourPoint(new ContourPoint(cP21, null));
+                rebarEndDetail[0].Curve = contour;
+                rebarEndDetail[0].Modify();
+
+                var secondContour = new Contour();
+                secondContour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
+                secondContour.AddContourPoint(new ContourPoint(ProfilePoints[0][4], null));
+                secondContour.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
+                secondContour.AddContourPoint(new ContourPoint(ProfilePoints[1][4], null));
+                rebarEndDetail[1].Curve = secondContour;
+                rebarEndDetail[1].Modify();
+            }
+
+
             bool succes = rebarSet.Modify();
             new Model().CommitChanges();
 
@@ -1176,14 +1202,14 @@ namespace ZeroTouchTekla.Profiles
             }
 
             List<RebarLegFace> rebarLegFaces = rebarSet.LegFaces;
-            Point cP35 = new Point(ProfilePoints[3][0].X, ProfilePoints[3][5].Y, ProfilePoints[3][0].Z);
+            Point cP35 = new Point(ProfilePoints[2][1].X, ProfilePoints[2][3].Y, ProfilePoints[2][1].Z);
 
             var mainFaceBottom = new RebarLegFace();
-            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
-            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][7], null));
-            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][6], null));
-            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][5], null));
-            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(cP35, null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][0], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][1], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][3], null));
+            mainFaceBottom.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][2], null));
             rebarLegFaces[0]=mainFaceBottom;
 
             bool succes = rebarSet.Modify();
@@ -1192,16 +1218,74 @@ namespace ZeroTouchTekla.Profiles
             bottomLengthModifier.Father = rebarSet;
             bottomLengthModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.END_OFFSET;
             bottomLengthModifier.RebarLengthAdjustment.AdjustmentLength = 40 * Convert.ToDouble(rebarSet.RebarProperties.Size);
-            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(new Point(ProfilePoints[3][5].X,ProfilePoints[3][5].Y,ProfilePoints[3][5].Z+50), null));
-            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(cP35, null));
+            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[2][3], null));
             bool inserted = bottomLengthModifier.Insert();
 
             new Model().CommitChanges();
 
         }
+        void RTWSClosingLongitudinalRebarBottom()
+        {
+            string rebarSize = Program.ExcelDictionary["CLR_Diameter"];
+            string spacing = Program.ExcelDictionary["CLR_Spacing"];
+            var rebarSet = new RebarSet();
+            rebarSet.RebarProperties.Name = "RTWS_CLR";
+            rebarSet.RebarProperties.Grade = "B500SP";
+            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
+            rebarSet.RebarProperties.Size = rebarSize;
+            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
+            rebarSet.LayerOrderNumber = 1;
+
+            Point corrected32 = new Point(ProfilePoints[3][2].X, ProfilePoints[3][4].Y, ProfilePoints[3][2].Z);
+
+            var bottomFace = new RebarLegFace();
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][3], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][1], null));
+            bottomFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            rebarSet.LegFaces.Add(bottomFace);
+
+            var topFace = new RebarLegFace();
+            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][1], null));
+            topFace.Contour.AddContourPoint(new ContourPoint(corrected32, null));
+            topFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[3][4], null));
+            rebarSet.LegFaces.Add(topFace);
+
+            var guideline = new RebarGuideline();
+            guideline.Spacing.Zones.Add(new RebarSpacingZone
+            {
+                Spacing = Convert.ToInt32(spacing),
+                SpacingType = RebarSpacingZone.SpacingEnum.EXACT,
+                Length = 100,
+                LengthType = RebarSpacingZone.LengthEnum.RELATIVE,
+            });
+            guideline.Spacing.StartOffset = 100;
+            guideline.Spacing.EndOffset = 100;
+
+            guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[3][0], null));
+            guideline.Curve.AddContourPoint(new ContourPoint(ProfilePoints[3][1], null));
+            rebarSet.Guidelines.Add(guideline);
+            bool succes = rebarSet.Insert();
+
+            var bottomLengthModifier = new RebarEndDetailModifier();
+            bottomLengthModifier.Father = rebarSet;
+            bottomLengthModifier.RebarLengthAdjustment.AdjustmentType = RebarLengthAdjustmentDataNullable.LengthAdjustmentTypeEnum.END_OFFSET;
+            bottomLengthModifier.RebarLengthAdjustment.AdjustmentLength = 40 * Convert.ToDouble(rebarSet.RebarProperties.Size);
+            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[2][3], null));
+            bottomLengthModifier.Curve.AddContourPoint(new ContourPoint(ProfilePoints[2][4], null));
+            bool inserted = bottomLengthModifier.Insert();
+
+
+            new Model().CommitChanges();
+
+            PostRebarCreationMethod(rebarSet, MethodBase.GetCurrentMethod());
+            LayerDictionary.Add(rebarSet.Identifier.ID, new int[] { 2,2 });
+        }
         void RTWSEditBottomCShapeRebar(RTWS rtws,RebarSet rebarSet)
         {
-            GeometricPlane plane = new GeometricPlane(ProfilePoints[3][0], new Vector(0, 1, 0), new Vector(0, 0, 1));
+            GeometricPlane plane = new GeometricPlane(ProfilePoints[2][0], new Vector(0, 1, 0), new Vector(0, 0, 1));
 
             RebarGuideline gl = rebarSet.Guidelines.FirstOrDefault();
             System.Collections.ArrayList arrayList = gl.Curve.ContourPoints;
@@ -1217,9 +1301,9 @@ namespace ZeroTouchTekla.Profiles
         }
         void RTWSEditTopCShapeRebar(RTWS rtws, RebarSet rebarSet)
         {
-            Vector longitudinal = Utility.GetVectorFromTwoPoints(ProfilePoints[4][0], ProfilePoints[5][0]);
-            Vector perpendicular = Utility.GetVectorFromTwoPoints(ProfilePoints[4][0], ProfilePoints[4][5]);
-            GeometricPlane skewPlane = new GeometricPlane(ProfilePoints[4][0], longitudinal,perpendicular);
+            Vector longitudinal = Utility.GetVectorFromTwoPoints(ProfilePoints[2][4], ProfilePoints[3][1]);
+            Vector perpendicular = Utility.GetVectorFromTwoPoints(ProfilePoints[2][4], ProfilePoints[2][3]);
+            GeometricPlane skewPlane = new GeometricPlane(ProfilePoints[2][4], longitudinal,perpendicular);
 
             GeometricPlane verticalPlane = new GeometricPlane(ProfilePoints[1][0], new Vector(0, 1, 0), new Vector(0, 0, 1));
 
@@ -1229,7 +1313,7 @@ namespace ZeroTouchTekla.Profiles
             var endPoint = arrayList[1] as ContourPoint;
             Line glLine = new Line(startPoint, endPoint);
 
-            if(startPoint.Y<=ProfilePoints[5][0].Y)
+            if(startPoint.Y<=ProfilePoints[3][1].Y)
             {
                 Point endIntersectionPoint = Utility.GetExtendedIntersection(glLine, skewPlane, 2);
                 gl.Curve.ContourPoints[1] = new ContourPoint(endIntersectionPoint, null);
