@@ -74,43 +74,42 @@ namespace ZeroTouchTekla
             startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
             startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
             startFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
-            rebarLegFaces.Add(startFace);
+            RebarLegFaces.Add(startFace);
 
             RebarLegFace firstFace = new RebarLegFace();
             firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
             firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
             firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
             firstFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
-            rebarLegFaces.Add(firstFace);
+            RebarLegFaces.Add(firstFace);
 
             RebarLegFace secondFace = new RebarLegFace();
             secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][2], null));
             secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
             secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
             secondFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
-            rebarLegFaces.Add(secondFace);
+            RebarLegFaces.Add(secondFace);
 
             RebarLegFace thirdFace = new RebarLegFace();
             thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][3], null));
             thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
             thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
             thirdFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
-            rebarLegFaces.Add(thirdFace);
+            RebarLegFaces.Add(thirdFace);
 
             RebarLegFace fourthFace = new RebarLegFace();
             fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][1], null));
             fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
             fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
             fourthFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[0][0], null));
-            rebarLegFaces.Add(fourthFace);
+            RebarLegFaces.Add(fourthFace);
 
             RebarLegFace endFace = new RebarLegFace();
             endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][0], null));
             endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][2], null));
             endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][3], null));
             endFace.Contour.AddContourPoint(new ContourPoint(ProfilePoints[1][1], null));
-            rebarLegFaces.Add(endFace);
-
+            RebarLegFaces.Add(endFace);
         }
        
         #region RebarCreationMethods
@@ -195,7 +194,7 @@ namespace ZeroTouchTekla
             var rightFace = GetRebarLegFace(3);
             rebarSet.LegFaces.Add(rightFace);
 
-            var topEndFace = rebarLegFaces[4];
+            var topEndFace = GetRebarLegFace(4);
             rebarSet.LegFaces.Add(topEndFace);
 
             var guideline = new RebarGuideline();
@@ -304,7 +303,7 @@ namespace ZeroTouchTekla
             var rightFace = GetRebarLegFace(3);
             rebarSet.LegFaces.Add(rightFace);
 
-            var topEndFace = rebarLegFaces[4];
+            var topEndFace = GetRebarLegFace(4);
             rebarSet.LegFaces.Add(topEndFace);
 
             var guideline = new RebarGuideline();
@@ -383,7 +382,7 @@ namespace ZeroTouchTekla
                     oEndPoint = new Point(endPoint.X, endPoint.Y, endPoint.Z + 40 * rebarSize);
                     break;
                 default:
-                    mainFace = rebarLegFaces[4];
+                    mainFace = GetRebarLegFace(4);
                     startPoint = ProfilePoints[0][1];
                     endPoint = ProfilePoints[0][0];
                     oStartPoint = new Point(startPoint.X, startPoint.Y - 40 * rebarSize, startPoint.Z);
@@ -516,7 +515,7 @@ namespace ZeroTouchTekla
                     topEndPoint = ProfilePoints[1][1];
                     break;
                 default:
-                    mainFace = rebarLegFaces[4];
+                    mainFace = GetRebarLegFace(4);
                     startPoint = ProfilePoints[0][1];
                     endPoint = ProfilePoints[0][0];
                     oStartPoint = new Point(startPoint.X, startPoint.Y + 40 * rebarSize, startPoint.Z);

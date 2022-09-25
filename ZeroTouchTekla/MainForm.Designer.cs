@@ -42,6 +42,7 @@ namespace ZeroTouchTekla
             this.TestButton = new System.Windows.Forms.Button();
             this.label1 = new System.Windows.Forms.Label();
             this.ForPartButton = new System.Windows.Forms.Button();
+            this.checkRebarLegFaceButton = new System.Windows.Forms.Button();
             this.utilityPanel.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -95,6 +96,7 @@ namespace ZeroTouchTekla
             // 
             // utilityPanel
             // 
+            this.utilityPanel.Controls.Add(this.checkRebarLegFaceButton);
             this.utilityPanel.Controls.Add(this.recreateRebarButton);
             this.utilityPanel.Controls.Add(this.CopySpacingButton);
             this.utilityPanel.Location = new System.Drawing.Point(560, 48);
@@ -172,6 +174,16 @@ namespace ZeroTouchTekla
             this.ForPartButton.UseVisualStyleBackColor = true;
             this.ForPartButton.Click += new System.EventHandler(this.ForPartButton_Click);
             // 
+            // checkRebarLegFaceButton
+            // 
+            this.checkRebarLegFaceButton.Location = new System.Drawing.Point(52, 61);
+            this.checkRebarLegFaceButton.Name = "checkRebarLegFaceButton";
+            this.checkRebarLegFaceButton.Size = new System.Drawing.Size(104, 23);
+            this.checkRebarLegFaceButton.TabIndex = 9;
+            this.checkRebarLegFaceButton.Text = "CheckRebarLegFace";
+            this.checkRebarLegFaceButton.UseVisualStyleBackColor = true;
+            this.checkRebarLegFaceButton.Click += new System.EventHandler(this.checkRebarLegFaceButton_Click);
+            // 
             // MainForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -211,5 +223,6 @@ namespace ZeroTouchTekla
         private System.Windows.Forms.Button WingButton;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button ForPartButton;
+        private System.Windows.Forms.Button checkRebarLegFaceButton;
     }
 }

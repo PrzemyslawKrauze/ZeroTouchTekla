@@ -78,5 +78,10 @@ namespace ZeroTouchTekla
         {
             RebarCreator.CreateForPart();
         }
+
+        private void checkRebarLegFaceButton_Click(object sender, EventArgs e)
+        {
+            RebarCreator.CheckRebarLegFaceSide();
+        }
     }
 }

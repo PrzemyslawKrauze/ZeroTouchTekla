@@ -52,11 +52,11 @@ namespace ZeroTouchTekla
         {
             if (diameter > 16)
             {
-                return 7 * diameter;
+                return 7 * diameter/2.0;
             }
             else
             {
-                return 4 * diameter;
+                return 4 * diameter/2.0;
             }
         }
         public static Face[] GetPartEndFaces(Part part)
@@ -64,7 +64,7 @@ namespace ZeroTouchTekla
             Solid soild = part.GetSolid(Solid.SolidCreationTypeEnum.RAW);
             FaceEnumerator faceEnumerator = soild.GetFaceEnumerator();
             List<Face> faces = GetFacesFromFaceEnumerator(faceEnumerator);
-            double maxVertex = 0;
+            double maxVertex = Double.MinValue;
             double minVertex = Double.MaxValue;
             Face startFace = null;
             Face endFace = null;
@@ -218,6 +218,27 @@ namespace ZeroTouchTekla
             }
             return pointList;
         }
+        public static List<Line> GetLinesFromPolygonPoints(Polygon polygon)
+        {
+            List<Line> lines = new List<Line>();
+            for(int i=0;i< polygon.Points.Count-1;i++)
+            {
+                Point firstPoint = polygon.Points[i] as Point;
+                Point secondPoint = polygon.Points[i + 1] as Point;
+                Line line = new Line(firstPoint, secondPoint);
+                lines.Add(line);
+            }
+            return lines;
+        }
+        public static Plane GetPlaneFromContour(Contour contour)
+        {
+            Plane plane = new Plane();
+            plane.Origin = contour.ContourPoints[0] as Point;
+            Vector axisX = Utility.GetVectorFromTwoPoints(contour.ContourPoints[0] as Point, contour.ContourPoints[1] as Point);
+            plane.AxisX = axisX;
+            plane.AxisY = Utility.GetVectorFromTwoPoints(contour.ContourPoints[0] as Point,contour.ContourPoints[2] as Point);
+            return plane;
+        }
     }
     public abstract class Element
     {
@@ -230,7 +251,7 @@ namespace ZeroTouchTekla
         private Dictionary<string, double> profileParameters = new Dictionary<string, double>();
         private Dictionary<int, int[]> layerDictionary = new Dictionary<int, int[]>();
         private Part[] baseParts;
-        List<RebarLegFace> rebarLegFaces = new List<RebarLegFace>();
+       private List<RebarLegFace> rebarLegFaces = new List<RebarLegFace>();
         //Constructors
         public static Element Initialize(params Part[] parts)
         {

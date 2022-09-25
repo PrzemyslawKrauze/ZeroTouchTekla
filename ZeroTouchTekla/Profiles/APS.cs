@@ -23,12 +23,12 @@ namespace ZeroTouchTekla
         public void GetProfilePointsAndParameters(List<Part> parts)
         {
             //ABSV Height*Width*Height2*TopWidth*Thickness*SkewWidth*Drop*HorizontalOffset*VerticaOffset
-            
+
             FirstBeamProperties(parts[0]);
             for (int i = 1; i < parts.Count; i++)
             {
                 NextBeamProperties(parts[i]);
-            }           
+            }
         }
         public override void Create()
         {
@@ -53,9 +53,75 @@ namespace ZeroTouchTekla
             ClosingRebar(ProfilePoints.Count - 2, false);
 
         }
-        public override void CreateSingle(string barName)
+        enum RebarType
         {
-            throw new NotImplementedException();
+            LR,
+            LER,
+            LSR,
+            PR,
+            TPR,
+            BPR,
+            CtrR,
+            CSR,
+            CR
+        }
+        public override void CreateSingle(string rebarName)
+        {
+            rebarName = rebarName.Split('_')[1];
+            RebarType rType;
+            Enum.TryParse(rebarName, out rType);
+            switch (rType)
+            {
+                case RebarType.LR:
+                    LongitudinalRebar(0);
+                    LongitudinalRebar(1);
+                    LongitudinalRebar(3);
+                    break;
+                case RebarType.LER:
+                    for (int i = 0; i < ProfilePoints.Count - 1; i++)
+                    {
+                        LongitudinalEndRebar(i);
+                    }
+                    break;
+                case RebarType.LSR:
+                    LongitudlSkewRebar();
+                    break;
+                case RebarType.PR:
+                    for (int i = 0; i < ProfilePoints.Count - 1; i++)
+                    {
+                        PerpendicularRebar(i, true);
+                        PerpendicularRebar(i, false);
+                    }
+                    break;
+                case RebarType.TPR:
+                    for (int i = 0; i < ProfilePoints.Count - 1; i++)
+                    {
+                        TopPerpendicularRebar(i);
+                    }
+                    break;
+                case RebarType.BPR:
+                    for (int i = 0; i < ProfilePoints.Count - 1; i++)
+                    {
+                        BottomPerpendicularRebar(i);
+                    }
+                    break;
+                case RebarType.CtrR:
+                    for (int i = 0; i < ProfilePoints.Count - 1; i++)
+                    {
+                        CantileverRebar(i);
+                    }
+                    break;
+                case RebarType.CSR:
+                    for (int i = 0; i < ProfilePoints.Count - 1; i++)
+                    {
+                        CShapeRebarCore(i);
+                    }
+                    break;
+                case RebarType.CR:
+                    ClosingRebar(0, true);
+                    ClosingRebar(ProfilePoints.Count - 2, false);
+                    break;
+            }
         }
         #region PrivateMethods
         void SetFirstProfileParameters(Part part)
@@ -219,16 +285,11 @@ namespace ZeroTouchTekla
         }
         void LongitudinalEndRebar(int number)
         {
-            string rebarSize = Program.ExcelDictionary["LR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["LR_Diameter"]);
             string spacing = Program.ExcelDictionary["LR_Spacing"];
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_LR_";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.LER);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             int f, s;
             f = 5;
@@ -302,16 +363,11 @@ namespace ZeroTouchTekla
         }
         void LongitudlSkewRebar()
         {
-            string rebarSize = Program.ExcelDictionary["LR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["LR_Diameter"]);
             string spacing = Program.ExcelDictionary["LR_Spacing"];
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_LR_";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.LSR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             int f, s;
             f = 3;
@@ -367,16 +423,11 @@ namespace ZeroTouchTekla
         }
         void LongitudinalRebar(int faceNumber)
         {
-            string rebarSize = Program.ExcelDictionary["LR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["LR_Diameter"]);
             string spacing = Program.ExcelDictionary["LR_Spacing"];
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_LR_" + faceNumber;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.LR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             int f, s;
             switch (faceNumber)
@@ -459,18 +510,13 @@ namespace ZeroTouchTekla
             string rebarSizeName = isFirst ? "FPR_Diameter" : "SPR_Diameter";
             string spacingName = isFirst ? "FPR_Spacing" : "SPR_Spacing";
             string offsetName = isFirst ? "FPR_SkewOffset" : "SPR_SkewOffset";
-            string rebarSize = Program.ExcelDictionary[rebarSizeName];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary[rebarSizeName]);
             string spacing = Program.ExcelDictionary[spacingName];
             double skewOffset = Convert.ToDouble(Program.ExcelDictionary[offsetName]);
             double dSPacing = Convert.ToDouble(spacing);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_LR_" + number;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.PR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             Point sp0 = ProfilePoints[number][0];
             Point sp1 = ProfilePoints[number][1];
@@ -567,17 +613,12 @@ namespace ZeroTouchTekla
         }
         void TopPerpendicularRebar(int number)
         {
-            string rebarSize = Program.ExcelDictionary["TPR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["TPR_Diameter"]);
             string spacing = Program.ExcelDictionary["TPR_Spacing"];
             double dSPacing = Convert.ToDouble(spacing);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_TPR_" + number;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.TPR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             Point sp0 = ProfilePoints[number][0];
             Point sp1 = ProfilePoints[number][1];
@@ -635,17 +676,12 @@ namespace ZeroTouchTekla
         }
         void BottomPerpendicularRebar(int number)
         {
-            string rebarSize = Program.ExcelDictionary["BPR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["BPR_Diameter"]);
             string spacing = Program.ExcelDictionary["BPR_Spacing"];
             double dSPacing = Convert.ToDouble(spacing);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_LR_" + number;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.BPR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             Point sp0 = ProfilePoints[number][0];
             Point sp5 = ProfilePoints[number][2];
@@ -688,17 +724,12 @@ namespace ZeroTouchTekla
         }
         void CantileverRebar(int number)
         {
-            string rebarSize = Program.ExcelDictionary["CR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["CR_Diameter"]);
             string spacing = Program.ExcelDictionary["CR_Spacing"];
             double diameter = Convert.ToDouble(rebarSize);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_CR";
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.CtrR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             Point sp0 = ProfilePoints[number][0];
             Point sp2 = ProfilePoints[number][3];
@@ -808,18 +839,13 @@ namespace ZeroTouchTekla
         }
         void CShapeRebar(int number, double offset)
         {
-            string rebarSize = Program.ExcelDictionary["CSR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["CSR_Diameter"]);
             double dRebarSize = Convert.ToDouble(rebarSize);
             string spacing = Program.ExcelDictionary["CSR_Spacing"];
             double dSPacing = Convert.ToDouble(spacing);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_CSR_" + number;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.CSR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             Point sp0 = ProfilePoints[number][0];
             Point sp1 = ProfilePoints[number][1];
@@ -892,18 +918,13 @@ namespace ZeroTouchTekla
         }
         void ClosingBackRebar(int number)
         {
-            string rebarSize = Program.ExcelDictionary["ClR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["ClR_Diameter"]);
             double dRebarSize = Convert.ToDouble(rebarSize);
             string spacing = Program.ExcelDictionary["ClR_Spacing"];
             double dSPacing = Convert.ToDouble(spacing);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_ClR_" + number;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.CR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             Point sp0 = ProfilePoints[number][0];
             Point sp1 = ProfilePoints[number][1];
@@ -971,18 +992,13 @@ namespace ZeroTouchTekla
         }
         void ClosingRebar(int number, bool isStart)
         {
-            string rebarSize = Program.ExcelDictionary["ClR_Diameter"];
+            int rebarSize = Convert.ToInt32(Program.ExcelDictionary["ClR_Diameter"]);
             double dRebarSize = Convert.ToDouble(rebarSize);
             string spacing = Program.ExcelDictionary["ClR_Spacing"];
             double dSPacing = Convert.ToDouble(spacing);
 
-            var rebarSet = new RebarSet();
-            rebarSet.RebarProperties.Name = "APS_ClR_" + number;
-            rebarSet.RebarProperties.Grade = "B500SP";
-            rebarSet.RebarProperties.Class = TeklaUtils.SetClass(Convert.ToDouble(rebarSize));
-            rebarSet.RebarProperties.Size = rebarSize;
-            rebarSet.RebarProperties.BendingRadius = TeklaUtils.GetBendingRadious(Convert.ToDouble(rebarSize));
-            rebarSet.LayerOrderNumber = 1;
+            string name = CreateRebarName(RebarType.CR);
+            var rebarSet = TeklaUtils.CreateDefaultRebarSet(name, rebarSize);
 
             int firstNumber = isStart ? number : number + 1;
             int secondNumber = isStart ? number + 1 : number;
@@ -1065,6 +1081,11 @@ namespace ZeroTouchTekla
                 faceLayer[i] = 2;
             }
             LayerDictionary.Add(rebarSet.Identifier.ID, faceLayer);
+        }
+        string CreateRebarName(RebarType rebarType)
+        {
+            string name = "APS_" + rebarType.ToString();
+            return name;
         }
         #endregion
         #region Fields

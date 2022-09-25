@@ -32,10 +32,10 @@ namespace ZeroTouchTekla
             List<List<Point>> points = TeklaUtils.GetPointsFromFaces(faces);
             points = TeklaUtils.SortPoints(points);
             Tekla.Structures.Model.UI.GraphicsDrawer graphicsDrawer = new Tekla.Structures.Model.UI.GraphicsDrawer();
-            for(int i=0;i< points.Count;i++)
+            for (int i = 0; i < points.Count; i++)
             {
                 List<Point> currentList = points[i];
-                for(int j=0;j<currentList.Count;j++)
+                for (int j = 0; j < currentList.Count; j++)
                 {
                     string text = i.ToString() + j.ToString();
                     Tekla.Structures.Model.UI.Color color = new Tekla.Structures.Model.UI.Color();
@@ -46,10 +46,10 @@ namespace ZeroTouchTekla
             //Restore user's plane
             Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
             Program.ActiveModel.CommitChanges();
-        } 
+        }
         static Part[] PickParts()
         {
-            
+
             Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
             ModelObjectEnumerator modelObjects = picker.PickObjects(Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_PARTS, "Pick parts");
 
@@ -61,6 +61,20 @@ namespace ZeroTouchTekla
                 parts[i] = modelObjects.Current as Part;
             }
             return parts;
+        }
+        static RebarSet[] PickRebarSets()
+        {
+            Tekla.Structures.Model.UI.Picker picker = new Tekla.Structures.Model.UI.Picker();
+            ModelObjectEnumerator modelObjects = picker.PickObjects(Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_REINFORCEMENTS, "Pick rebar sets");
+
+            RebarSet[] rebarSets = new RebarSet[modelObjects.GetSize()];
+
+            for (int i = 0; i < rebarSets.Length; i++)
+            {
+                modelObjects.MoveNext();
+                rebarSets[i] = modelObjects.Current as RebarSet;
+            }
+            return rebarSets;
         }
         public static void CreateForPart()
         {
@@ -123,70 +137,114 @@ namespace ZeroTouchTekla
             Part[] pickedParts = PickParts();
 
             Tekla.Structures.Model.UI.Picker rebarPicker = new Tekla.Structures.Model.UI.Picker();
-            Tekla.Structures.Model.UI.Picker.PickObjectEnum rebarPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectEnum.PICK_ONE_REINFORCEMENT;
 
-            try
+            Tekla.Structures.Model.UI.Picker.PickObjectsEnum rebarPickObjectEnum = Tekla.Structures.Model.UI.Picker.PickObjectsEnum.PICK_N_REINFORCEMENTS;
+            ModelObjectEnumerator modelObjectEnumerator = rebarPicker.PickObjects(rebarPickObjectEnum);
+            List<ModelObject> rebarSetList = Utility.ToList(modelObjectEnumerator);
+
+            foreach (var mo in rebarSetList)
             {
-                Part beam = pickedParts[0];
-
-                RebarSet rebarSet = rebarPicker.PickObject(rebarPickObjectEnum) as RebarSet;
-                rebarSet.GetUserProperty(RebarCreator.FATHER_ID_NAME, ref FatherID);
-                string rebarName = rebarSet.RebarProperties.Name;
-
-                string hostName = beam.Profile.ProfileString;
-                Element.ProfileType profileType = Element.GetProfileType(hostName);
-                if (profileType != Element.ProfileType.None)
+                try
                 {
-                    Type[] Types = new Type[] { typeof(RebarSet) };
-                    ModelObjectEnumerator moe = Program.ActiveModel.GetModelObjectSelector().GetAllObjectsWithType(Types);
-                    var rebarList = Utility.ToList(moe);
+                    Part beam = pickedParts[0];
+                    RebarSet rebarSet  = mo as RebarSet;
 
-                    List<RebarSet> selectedRebars = (from RebarSet r in rebarList
-                                                     where Utility.GetUserProperty(r, FATHER_ID_NAME) == beam.Identifier.ID
-                                                     select r).ToList();
-                    Dictionary<int, int[]> currentLayerDictionary = new Dictionary<int, int[]>();
-                    foreach (RebarSet rs in selectedRebars)
+                  // RebarSet rebarSet = rebarPicker.PickObject(rebarPickObjectEnum) as RebarSet;
+                    rebarSet.GetUserProperty(RebarCreator.FATHER_ID_NAME, ref FatherID);
+                    string rebarName = rebarSet.RebarProperties.Name;
+
+                    string hostName = beam.Profile.ProfileString;
+                    Element.ProfileType profileType = Element.GetProfileType(hostName);
+                    if (profileType != Element.ProfileType.None)
                     {
-                        List<RebarLegFace> rebarLegFaces = rs.LegFaces;
-                        int[] layers = new int[rebarLegFaces.Count];
-                        for (int i = 0; i < rebarLegFaces.Count; i++)
+                        Type[] Types = new Type[] { typeof(RebarSet) };
+                        ModelObjectEnumerator moe = Program.ActiveModel.GetModelObjectSelector().GetAllObjectsWithType(Types);
+                        var rebarList = Utility.ToList(moe);
+
+                        List<RebarSet> selectedRebars = (from RebarSet r in rebarList
+                                                         where Utility.GetUserProperty(r, FATHER_ID_NAME) == beam.Identifier.ID
+                                                         select r).ToList();
+                        Dictionary<int, int[]> currentLayerDictionary = new Dictionary<int, int[]>();
+                        foreach (RebarSet rs in selectedRebars)
                         {
-                            layers[i] = rebarLegFaces[i].LayerOrderNumber;
+                            List<RebarLegFace> rebarLegFaces = rs.LegFaces;
+                            int[] layers = new int[rebarLegFaces.Count];
+                            for (int i = 0; i < rebarLegFaces.Count; i++)
+                            {
+                                layers[i] = rebarLegFaces[i].LayerOrderNumber;
+                            }
+
+                            currentLayerDictionary.Add(rs.Identifier.ID, layers);
                         }
 
-                        currentLayerDictionary.Add(rs.Identifier.ID, layers);
+                        List<RebarSet> barsToDelete = (from RebarSet rs in selectedRebars
+                                                       where rs.RebarProperties.Name == rebarName
+                                                       select rs).ToList();
+
+                        foreach (RebarSet rs in barsToDelete)
+                        {
+                            bool deleted = rs.Delete();
+                        }
+                        Program.ActiveModel.CommitChanges();
+
+                        //Store current work plane
+                        TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
+                        //Get beam local plane
+                        TransformationPlane localPlane = new TransformationPlane(beam.GetCoordinateSystem());
+                        Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
+
+                        Element element = Element.Initialize(pickedParts);
+
+                        element.CreateSingle(rebarName);
+                        //Restore user work plane
+                        Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
+                        Program.ActiveModel.CommitChanges();
+
+                        ChangeLayer(Program.ActiveModel, element);
+                        ChangeLayer(Program.ActiveModel, element);
                     }
-
-                    List<RebarSet> barsToDelete = (from RebarSet rs in selectedRebars
-                                                   where rs.RebarProperties.Name == rebarName
-                                                   select rs).ToList();
-
-                    foreach (RebarSet rs in barsToDelete)
-                    {
-                        bool deleted = rs.Delete();
-                    }
-                    Program.ActiveModel.CommitChanges();
-
-                    //Store current work plane
-                    TransformationPlane currentPlane = Program.ActiveModel.GetWorkPlaneHandler().GetCurrentTransformationPlane();
-                    //Get beam local plane
-                    TransformationPlane localPlane = new TransformationPlane(beam.GetCoordinateSystem());
-                    Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(localPlane);
-
-                    Element element = Element.Initialize(pickedParts);
-
-                    element.CreateSingle(rebarName);
-                    //Restore user work plane
-                    Program.ActiveModel.GetWorkPlaneHandler().SetCurrentTransformationPlane(currentPlane);
-                    Program.ActiveModel.CommitChanges();
-
-                    ChangeLayer(Program.ActiveModel, element);
-                    ChangeLayer(Program.ActiveModel, element);
+                }
+                catch (System.ApplicationException)
+                {
+                    Operation.DisplayPrompt("User interrupted!");
                 }
             }
-            catch (System.ApplicationException)
+
+        }
+        public static void CheckRebarLegFaceSide()
+        {
+            RebarSet[] rebarSets = PickRebarSets();
+           
+            foreach (var rebarSet in rebarSets)
             {
-                Operation.DisplayPrompt("User interrupted!");
+                bool endForThisRebarSet = false;
+                List<RebarLegFace> legFaceList = rebarSet.LegFaces;
+                ModelObjectEnumerator singleRebarEnum = rebarSet.GetReinforcements();
+                Polygon[] singleRebarPolygons = new Polygon[singleRebarEnum.GetSize()];
+                for (int i = 0; i < singleRebarPolygons.Length; i++)
+                {
+                    singleRebarEnum.MoveNext();
+                    SingleRebar rebar = singleRebarEnum.Current as SingleRebar;
+                    singleRebarPolygons[i] = rebar.Polygon;
+                    List<Line> lines = TeklaUtils.GetLinesFromPolygonPoints(singleRebarPolygons[i]);
+
+                    for(int j=0;j<legFaceList.Count;j++)
+                    {
+                        GeometricPlane plane = Utility.GetPlaneFromFace(legFaceList[j]);
+                        Point intersection =  Intersection.LineToPlane(lines[i], plane);
+                        if(intersection != null)
+                        {
+                            legFaceList[j].Reversed = !legFaceList[j].Reversed;
+                            endForThisRebarSet = true;
+                            break;
+                        }
+                    }
+                    if(endForThisRebarSet)
+                    {
+                        break;
+                    }
+                }
+                
             }
 
         }
